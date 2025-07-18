@@ -1,9 +1,9 @@
-from datetime import datetime, UTC
 from enum import Enum
 from typing import Optional
 
 from beanie import Document, Link
-from pydantic import Field
+
+from src.models.paper import Paper
 
 
 class BlockKind(Enum):
@@ -20,16 +20,10 @@ class BlockKind(Enum):
     QUIZ = "quiz"
 
 
-class Paper(Document):
-    title: str
-    doi: str
-    created_at: datetime = Field(default_factory=datetime.now(UTC))
-
-
 class Block(Document):
     kind: BlockKind
     paper: Link[Paper]
-    index: int  # Position of the block in the paper, starting from 0
+    next_block: Optional[Link["Block"]] = None
 
 
 class Paragraph(Block):
