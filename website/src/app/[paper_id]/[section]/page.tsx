@@ -11,12 +11,12 @@ import { PaperData, FrontendPaper, QuizBlock } from "@/data/types";
 interface PaperSectionPageProps {
   params: Promise<{
     paper_id: string;
-    section_id: string;
+    section: string;
   }>;
 }
 
 export default function PaperSectionPage({ params }: PaperSectionPageProps) {
-  const { paper_id, section_id: section_id } = React.use(params);
+  const { paper_id, section } = React.use(params);
 
   const { paper, sections, isLoading: loading, isRefetching, isError, error, hasCachedData } = usePaperData(paper_id);
 
@@ -51,7 +51,7 @@ export default function PaperSectionPage({ params }: PaperSectionPageProps) {
   }
 
   // Find the current section
-  const currentSection = sections.find((s) => s.id === section_id);
+  const currentSection = sections.find((s) => s.id === section);
 
   if (!currentSection) {
     notFound();
@@ -75,7 +75,7 @@ export default function PaperSectionPage({ params }: PaperSectionPageProps) {
   };
 
   return (
-    <MainLayout paperData={paperData} currentSectionId={section_id}>
+    <MainLayout paperData={paperData} currentSectionId={section}>
       {/* Subtle loading indicator for background refreshes */}
       {isRefetching && hasCachedData && (
         <div className="fixed top-0 left-0 right-0 h-1 bg-primary/20 z-50">

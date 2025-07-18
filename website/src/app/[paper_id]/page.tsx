@@ -15,9 +15,14 @@ interface PaperPageProps {
 function findFirstSection(blocks: PaperBlock[]): string | null {
   // Look for the first header that could serve as a section
   for (const block of blocks) {
-    if (block.kind === BlockKind.HEADER && (block as HeaderBlock).level <= 2) {
-      return block.id;
+    if (block.kind === BlockKind.HEADER && block.level <= 2) {
+      return `section-${block.id}`;
     }
+  }
+
+  // If no headers found, create a default section
+  if (blocks.length > 0) {
+    return "section-default";
   }
 
   return null;
