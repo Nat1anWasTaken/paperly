@@ -1,8 +1,10 @@
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
 from typing import Optional
 
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
+
 from src.models.analysis import AnalysisStatus, Analysis
+from src.utils.object_id import validate_object_id_or_raise_http_exception
 
 router = APIRouter(prefix="/analyses")
 
@@ -44,6 +46,7 @@ async def create_analysis(request: CreateAnalysisRequest) -> CreateAnalysisRespo
         analysis_id=str(analysis.id),
     )
 
+
 class GetAnalysisResponse(BaseModel):
     """
     Response model for retrieving an analysis task.
@@ -63,15 +66,16 @@ async def get_analysis(analysis_id: str) -> GetAnalysisResponse:
     :return: Analysis details including status and file information.
     :rtype: GetAnalysisResponse
     """
+    object_id = validate_object_id_or_raise_http_exception(analysis_id)
+
     analysis = await Analysis.get(analysis_id)
-    
+
     if not analysis:
         raise HTTPException(status_code=404, detail="Analysis not found")
-    
+
     return GetAnalysisResponse(
         analysis_id=str(analysis.id),
         status=analysis.status,
         file_key=analysis.file_key,
         paper_id=str(analysis.paper.ref.id) if analysis.paper else None
     )
-
