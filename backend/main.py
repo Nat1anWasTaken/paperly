@@ -1,6 +1,7 @@
 import asyncio
-from src.database import connect_to_mongo, close_mongo_connection, get_database
-from src.logging import setup_logging, get_logger
+
+from src.database import get_database_instance
+from src.logging import get_logger, setup_logging
 
 
 async def main():
@@ -10,19 +11,16 @@ async def main():
     logger.info("Starting application")
 
     try:
-        await connect_to_mongo()
-
-        # Example usage
-        db = get_database()
-        logger.info(f"Database connected: {db.name}")
-
-        # Add your application logic here
+        db_instance = get_database_instance()
+        await db_instance.connect()
 
     except Exception as e:
         logger.error(f"Application error: {e}")
         raise
+
     finally:
-        await close_mongo_connection()
+        db_instance = get_database_instance()
+        await db_instance.close()
         logger.info("Application shutdown complete")
 
 

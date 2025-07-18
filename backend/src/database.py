@@ -1,6 +1,8 @@
 import os
-from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
+
 from dotenv import load_dotenv
+from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
+
 from .logging import get_logger
 
 load_dotenv()
@@ -23,39 +25,34 @@ class Database:
             self.database: AsyncIOMotorDatabase | None = None
             self._initialized = True
 
+    async def connect(self):
+        try:
+            mongodb_url = os.getenv("MONGODB_URL", "mongodb://localhost:27017")
+            database_name = os.getenv("DATABASE_NAME", "paperly")
+
+            logger.info(f"Connecting to MongoDB at {mongodb_url}")
+            self.client = AsyncIOMotorClient(mongodb_url)
+            self.database = self.client.get_database(database_name)
+
+            await self.client.admin.command("ping")
+            logger.info(
+                f"Successfully connected to MongoDB database: {self.database.name}"
+            )
+
+        except Exception as e:
+            logger.error(f"Failed to connect to MongoDB: {e}")
+            raise
+
+    async def close(self):
+        if self.client:
+            self.client.close()
+            logger.info("Disconnected from MongoDB")
+        else:
+            logger.warning("No MongoDB connection to close")
+
 
 def get_database_instance():
     return Database()
-
-
-async def connect_to_mongo():
-    try:
-        mongodb_url = os.getenv("MONGODB_URL", "mongodb://localhost:27017")
-        database_name = os.getenv("DATABASE_NAME", "paperly")
-
-        db_instance = get_database_instance()
-
-        logger.info(f"Connecting to MongoDB at {mongodb_url}")
-        db_instance.client = AsyncIOMotorClient(mongodb_url)
-        db_instance.database = db_instance.client.get_database(database_name)
-
-        await db_instance.client.admin.command("ping")
-        logger.info(
-            f"Successfully connected to MongoDB database: {db_instance.database.name}"
-        )
-
-    except Exception as e:
-        logger.error(f"Failed to connect to MongoDB: {e}")
-        raise
-
-
-async def close_mongo_connection():
-    db_instance = get_database_instance()
-    if db_instance.client:
-        db_instance.client.close()
-        logger.info("Disconnected from MongoDB")
-    else:
-        logger.warning("No MongoDB connection to close")
 
 
 def get_database():
