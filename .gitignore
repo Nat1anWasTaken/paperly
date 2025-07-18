@@ -1,2 +1,6 @@
+# Project Specific
 data/
 minio/
+
+# JetBrains IDEs
+.idea/
