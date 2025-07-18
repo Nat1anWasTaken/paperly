@@ -1,4 +1,4 @@
-import { MainLayout } from "@/app/layouts/main-layout"
+import { MainLayout } from "@/components/layouts/main-layout"
 
 export default function Home() {
   const samplePaperSections = [
