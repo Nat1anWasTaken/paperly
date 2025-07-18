@@ -226,28 +226,64 @@ async def get_blocks_in_order(paper_id: PydanticObjectId) -> List[Block]:
     """
     Retrieve all blocks for a given paper ID in order.
 
-    :param paper_id: ID of the paper to retrieve blocks for.
+    :param paper_id: The ID of the paper to retrieve blocks for.
     :return: List of block objects.
     :rtype: List[Block]
     """
-    all_blocks = await Block.find(Block.paper == paper_id).to_list()
+    # Use aggregation to get all fields and convert to proper types
+    pipeline = [
+        {"$match": {"paper.$id": paper_id}},
+        {"$addFields": {"id": "$_id"}}  # Add id field for easier access
+    ]
     
-    if not all_blocks:
+    cursor = Block.aggregate(pipeline)
+    block_docs = await cursor.to_list(length=None)
+    
+    logger.info(f"Retrieved {len(block_docs)} blocks for paper {paper_id}")
+
+    if not block_docs:
         return []
 
-    next_block_ids = {block.next_block.ref.id for block in all_blocks if block.next_block}
-    first_block = next(block for block in all_blocks if block.id not in next_block_ids)
+    # Convert documents to proper block types
+    typed_blocks = []
+    block_class_map = {
+        BlockKind.HEADER: Header,
+        BlockKind.PARAGRAPH: Paragraph,
+        BlockKind.FIGURE: Figure,
+        BlockKind.TABLE: Table,
+        BlockKind.EQUATION: Equation,
+        BlockKind.CODE_BLOCK: CodeBlock,
+        BlockKind.QUOTE: Quote,
+    }
+    
+    for doc in block_docs:
+        kind = BlockKind(doc["kind"])
+        block_class = block_class_map.get(kind, Block)
+        
+        try:
+            # Create block instance from document
+            block = block_class.model_validate(doc)
+            typed_blocks.append(block)
+        except Exception as e:
+            logger.warning(f"Failed to parse block {doc.get('_id')}: {e}")
+            # Fall back to base Block
+            base_block = Block.model_validate(doc)
+            typed_blocks.append(base_block)
+
+    # Order the blocks
+    next_block_ids = {block.next_block.ref.id for block in typed_blocks if block.next_block}
+    first_block = next(block for block in typed_blocks if block.id not in next_block_ids)
 
     ordered_blocks = []
     current_block = first_block
-    
+
     while current_block:
         ordered_blocks.append(current_block)
         if current_block.next_block:
-            current_block = next((block for block in all_blocks if block.id == current_block.next_block.ref.id), None)
+            current_block = next((block for block in typed_blocks if block.id == current_block.next_block.ref.id), None)
         else:
             current_block = None
-    
+
     return ordered_blocks
 
 

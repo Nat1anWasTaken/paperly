@@ -5,11 +5,14 @@ from beanie import PydanticObjectId
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, ValidationError
 
+from src.logging import get_logger
 from src.models.block import Block, BlockMixin
 from src.models.paper import Paper
 from src.storage.s3 import storage_client, bucket_name
 from src.utils.blocks import get_blocks_in_order
 from src.utils.object_id import validate_object_id_or_raise_http_exception
+
+logger = get_logger(__name__)
 
 router = APIRouter(prefix="/papers")
 
@@ -74,9 +77,9 @@ async def get_paper(paper_id: str):
     :rtype: Paper
     :raises HTTPException: If the paper is not found.
     """
-    object_id = validate_object_id_or_raise_http_exception(paper_id)
+    paper_object_id = validate_object_id_or_raise_http_exception(paper_id)
 
-    paper = await Paper.get(object_id)
+    paper = await Paper.get(paper_object_id)
 
     if not paper:
         raise HTTPException(status_code=404, detail="Paper not found")
@@ -99,13 +102,13 @@ async def get_paper_blocks(paper_id: str):
     :rtype: PaperBlocksResponse
     :raises HTTPException: If the paper is not found.
     """
-    object_id = validate_object_id_or_raise_http_exception(paper_id)
+    paper_object_id = validate_object_id_or_raise_http_exception(paper_id)
 
-    paper = await Paper.get(object_id)
+    paper = await Paper.get(paper_object_id)
 
     if not paper:
         raise HTTPException(status_code=404, detail="Paper not found")
 
-    blocks = await get_blocks_in_order(object_id)
+    blocks = await get_blocks_in_order(paper_object_id)
 
     return PaperBlocksResponse(blocks=blocks)
