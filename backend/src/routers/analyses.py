@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
+from typing import Optional
 
 from src.models.analysis import AnalysisStatus, Analysis
 
@@ -18,7 +19,7 @@ class CreateAnalysisResponse(BaseModel):
     Response model for analysis creation endpoint.
     """
     analysis_id: str
-    status: AnalysisStatus.CREATED = AnalysisStatus.CREATED
+    status: AnalysisStatus = AnalysisStatus.CREATED
     message: str = "Analysis task created successfully."
 
 
@@ -34,7 +35,7 @@ async def create_analysis(request: CreateAnalysisRequest) -> CreateAnalysisRespo
     analysis = Analysis(
         status=AnalysisStatus.CREATED,
         file_key=request.file_key,
-        paper_id=""
+        paper=None
     )
 
     await analysis.insert()
@@ -50,7 +51,7 @@ class GetAnalysisResponse(BaseModel):
     analysis_id: str
     status: AnalysisStatus
     file_key: str
-    paper_id: str
+    paper_id: Optional[str] = None
 
 
 @router.get("/{analysis_id}", response_model=GetAnalysisResponse)
@@ -71,6 +72,6 @@ async def get_analysis(analysis_id: str) -> GetAnalysisResponse:
         analysis_id=str(analysis.id),
         status=analysis.status,
         file_key=analysis.file_key,
-        paper_id=analysis.paper_id
+        paper_id=str(analysis.paper.ref.id) if analysis.paper else None
     )
 

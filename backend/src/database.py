@@ -5,6 +5,10 @@ from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 
 from src.config import settings
 from src.logging import get_logger
+from src.models.analysis import Analysis
+from src.models.block import Block, Paragraph, Header, Figure, Table, Equation, CodeBlock, Quote, Callout, Reference, \
+    Footnote, Quiz
+from src.models.paper import Paper
 
 logger = get_logger(__name__)
 
@@ -50,10 +54,27 @@ class Database:
             logger.warning("No MongoDB connection to close")
 
     async def initialize_beanie(self):
-        if not self.database:
+        if self.database is None:
             raise RuntimeError("Database connection is not established.")
 
-        await init_beanie(self.database)
+        document_models = [
+            Analysis,
+            Paper,
+            Block,
+            Paragraph,
+            Header,
+            Figure,
+            Table,
+            Equation,
+            CodeBlock,
+            Quote,
+            Callout,
+            Reference,
+            Footnote,
+            Quiz
+        ]
+
+        await init_beanie(database=self.database, document_models=document_models)
 
 
 def get_database_instance():
