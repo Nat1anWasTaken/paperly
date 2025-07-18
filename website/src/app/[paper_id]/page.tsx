@@ -16,15 +16,10 @@ function findFirstSection(blocks: PaperBlock[]): string | null {
   // Look for the first header that could serve as a section
   for (const block of blocks) {
     if (block.kind === BlockKind.HEADER && (block as HeaderBlock).level <= 2) {
-      return `section-${block.id}`;
+      return block.id;
     }
   }
-  
-  // If no headers found, create a default section
-  if (blocks.length > 0) {
-    return "section-default";
-  }
-  
+
   return null;
 }
 
@@ -32,7 +27,7 @@ export default function PaperPage({ params }: PaperPageProps) {
   const { paper_id } = React.use(params);
   const router = useRouter();
   const { prefetchPaper } = usePrefetchPaper();
-  
+
   const { data: blocks, isLoading: loading, error } = usePaperBlocks(paper_id);
 
   // Prefetch all paper data immediately when this page loads
@@ -42,12 +37,12 @@ export default function PaperPage({ params }: PaperPageProps) {
 
   React.useEffect(() => {
     if (blocks && !loading) {
-      console.log('Fetched blocks:', blocks.length);
-      
+      console.log("Fetched blocks:", blocks.length);
+
       const firstSectionId = findFirstSection(blocks);
-      
-      console.log('First section ID:', firstSectionId);
-      
+
+      console.log("First section ID:", firstSectionId);
+
       if (firstSectionId) {
         // Use router.replace instead of redirect
         router.replace(`/${paper_id}/${firstSectionId}`);
@@ -72,10 +67,7 @@ export default function PaperPage({ params }: PaperPageProps) {
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-4 text-destructive">Error Loading Paper</h1>
           <p className="text-muted-foreground mb-4">{error instanceof Error ? error.message : "Failed to load paper"}</p>
-          <button 
-            onClick={() => window.location.reload()} 
-            className="px-4 py-2 bg-primary text-primary-foreground rounded hover:bg-primary/90"
-          >
+          <button onClick={() => window.location.reload()} className="px-4 py-2 bg-primary text-primary-foreground rounded hover:bg-primary/90">
             Try Again
           </button>
         </div>
@@ -104,4 +96,4 @@ export default function PaperPage({ params }: PaperPageProps) {
       </div>
     </div>
   );
-} 
+}

@@ -4,7 +4,7 @@ import { api } from "@/lib/api";
 // Query Keys
 export const analysisKeys = {
   all: ["analysis"] as const,
-  analysis: (id: string) => [...analysisKeys.all, "detail", id] as const,
+  analysis: (id: string) => [...analysisKeys.all, "detail", id] as const
 };
 
 /**
@@ -17,13 +17,13 @@ export function useAnalysis(analysisId: string, enabled = true) {
     enabled: enabled && !!analysisId,
     refetchInterval: (query) => {
       // Stop polling when analysis is complete or errored
-      if (query.state.data?.status === 'completed' || query.state.data?.status === 'errored') {
+      if (query.state.data?.status === "completed" || query.state.data?.status === "errored") {
         return false;
       }
       // Poll every 2 seconds while analysis is in progress
       return 2000;
     },
-    staleTime: 0, // Always fetch fresh data for analysis status
+    staleTime: 0 // Always fetch fresh data for analysis status
   });
 }
 
@@ -34,7 +34,7 @@ export function useUploadFile() {
   return useMutation({
     mutationFn: async ({ uploadUrl, file }: { uploadUrl: string; file: File }) => {
       return api.uploadFile(uploadUrl, file);
-    },
+    }
   });
 }
 
@@ -43,7 +43,7 @@ export function useUploadFile() {
  */
 export function useGetUploadUrl() {
   return useMutation({
-    mutationFn: () => api.getUploadUrl(),
+    mutationFn: () => api.getUploadUrl()
   });
 }
 
@@ -52,7 +52,7 @@ export function useGetUploadUrl() {
  */
 export function useCreateAnalysis() {
   return useMutation({
-    mutationFn: (fileKey: string) => api.createAnalysis(fileKey),
+    mutationFn: (fileKey: string) => api.createAnalysis(fileKey)
   });
 }
 
@@ -61,15 +61,9 @@ export function useCreateAnalysis() {
  */
 export function useCreateSummary() {
   return useMutation({
-    mutationFn: async ({
-      block_ids,
-      language = 'en_US',
-    }: {
-      block_ids: string[];
-      language?: string;
-    }) => {
+    mutationFn: async ({ block_ids, language = "en_US" }: { block_ids: string[]; language?: string }) => {
       return api.createSummary({ block_ids, language });
-    },
+    }
   });
 }
 
@@ -78,18 +72,8 @@ export function useCreateSummary() {
  */
 export function useChatWithPaper() {
   return useMutation({
-    mutationFn: async ({
-      paperId,
-      message,
-      history = [],
-      language = 'en_US',
-    }: {
-      paperId: string;
-      message: string;
-      history?: Array<{ role: string; content: string }>;
-      language?: string;
-    }) => {
+    mutationFn: async ({ paperId, message, history = [], language = "en_US" }: { paperId: string; message: string; history?: Array<{ role: string; content: string }>; language?: string }) => {
       return api.chatWithPaper(paperId, message, history, language);
-    },
+    }
   });
-} 
+}

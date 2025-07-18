@@ -21,13 +21,7 @@ interface PaperNavigationProps {
   paperId: string;
 }
 
-export function PaperNavigation({
-  paperSections,
-  activeSectionId,
-  onSectionClick,
-  onToggleSidebar,
-  paperId,
-}: PaperNavigationProps) {
+export function PaperNavigation({ paperSections, activeSectionId, onSectionClick, onToggleSidebar, paperId }: PaperNavigationProps) {
   const { prefetchPaper } = usePrefetchPaper();
   return (
     <div className="h-full overflow-y-auto bg-card">
@@ -35,25 +29,13 @@ export function PaperNavigation({
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <Link href="/">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="p-1"
-                title="Go to home"
-              >
+              <Button variant="ghost" size="sm" className="p-1" title="Go to home">
                 <Home className="size-4" />
               </Button>
             </Link>
-            <h2 className="text-lg font-semibold text-card-foreground">
-              Contents
-            </h2>
+            <h2 className="text-lg font-semibold text-card-foreground">Contents</h2>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onToggleSidebar}
-            className="p-1"
-          >
+          <Button variant="ghost" size="sm" onClick={onToggleSidebar} className="p-1">
             <ChevronLeft className="size-4" />
           </Button>
         </div>
@@ -66,8 +48,7 @@ export function PaperNavigation({
                 "w-full justify-start text-left h-auto p-3 hover:bg-accent",
                 section.level === 2 && "ml-4 text-sm",
                 section.level === 3 && "ml-8 text-sm",
-                activeSectionId === section.id &&
-                  "bg-accent text-accent-foreground"
+                activeSectionId === section.id && "bg-accent text-accent-foreground"
               )}
               onClick={() => onSectionClick(section.id)}
               onMouseEnter={() => {
@@ -75,13 +56,7 @@ export function PaperNavigation({
                 prefetchPaper(paperId);
               }}
             >
-              <span className="text-sm text-muted-foreground mr-2">
-                {section.level === 1
-                  ? "•"
-                  : section.level === 2
-                  ? "◦"
-                  : "▪"}
-              </span>
+              <span className="text-sm text-muted-foreground mr-2">{section.level === 1 ? "•" : section.level === 2 ? "◦" : "▪"}</span>
               {section.title}
             </Button>
           ))}
@@ -89,4 +64,4 @@ export function PaperNavigation({
       </div>
     </div>
   );
-} 
+}

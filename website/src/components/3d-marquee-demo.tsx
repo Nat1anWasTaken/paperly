@@ -34,12 +34,12 @@ export default function ThreeDMarqueeDemo() {
     "https://assets.aceternity.com/multi-step-loader.png",
     "https://assets.aceternity.com/vortex.png",
     "https://assets.aceternity.com/wobble-card.png",
-    "https://assets.aceternity.com/world-map.webp",
+    "https://assets.aceternity.com/world-map.webp"
   ];
-  
+
   return (
     <div className="mx-auto my-10 max-w-7xl rounded-3xl bg-gray-950/5 p-2 ring-1 ring-neutral-700/10 dark:bg-neutral-800">
       <ThreeDMarquee images={images} />
     </div>
   );
-} 
+}

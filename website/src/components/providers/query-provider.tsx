@@ -25,19 +25,15 @@ export function QueryProvider({ children }: QueryProviderProps) {
             // Refetch on reconnect
             refetchOnReconnect: true,
             // Enable network mode to work offline with cached data
-            networkMode: 'offlineFirst',
+            networkMode: "offlineFirst"
           },
           mutations: {
             // Retry mutations once
-            retry: 1,
-          },
-        },
+            retry: 1
+          }
+        }
       })
   );
 
-  return (
-    <QueryClientProvider client={queryClient}>
-      {children}
-    </QueryClientProvider>
-  );
-} 
+  return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
+}

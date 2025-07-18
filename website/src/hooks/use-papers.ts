@@ -10,7 +10,7 @@ export const paperKeys = {
   details: () => [...paperKeys.all, "detail"] as const,
   detail: (id: string) => [...paperKeys.details(), id] as const,
   blocks: (id: string) => [...paperKeys.detail(id), "blocks"] as const,
-  sections: (id: string) => [...paperKeys.detail(id), "sections"] as const,
+  sections: (id: string) => [...paperKeys.detail(id), "sections"] as const
 };
 
 // Helper function to organize blocks into sections
@@ -29,7 +29,7 @@ function organizeBlocksIntoSections(blocks: PaperBlock[]): PaperSection[] {
         id: `section-${block.id}`,
         title: block.text,
         level: block.level,
-        blocks: [block],
+        blocks: [block]
       };
     } else {
       // Add block to current section, or create a default section if none exists
@@ -38,7 +38,7 @@ function organizeBlocksIntoSections(blocks: PaperBlock[]): PaperSection[] {
           id: "section-default",
           title: "Content",
           level: 1,
-          blocks: [],
+          blocks: []
         };
       }
       currentSection.blocks.push(block);
@@ -62,7 +62,7 @@ export function usePapers() {
   return useQuery({
     queryKey: paperKeys.lists(),
     queryFn: () => api.getPapers(),
-    staleTime: 2 * 60 * 1000, // 2 minutes
+    staleTime: 2 * 60 * 1000 // 2 minutes
   });
 }
 
@@ -74,7 +74,7 @@ export function usePaper(paperId: string) {
     queryKey: paperKeys.detail(paperId),
     queryFn: () => api.getPaper(paperId),
     enabled: !!paperId,
-    staleTime: 15 * 60 * 1000, // 15 minutes - papers don't change often
+    staleTime: 15 * 60 * 1000 // 15 minutes - papers don't change often
   });
 }
 
@@ -86,7 +86,7 @@ export function usePaperBlocks(paperId: string) {
     queryKey: paperKeys.blocks(paperId),
     queryFn: () => api.getPaperBlocksForUI(paperId),
     enabled: !!paperId,
-    staleTime: 15 * 60 * 1000, // 15 minutes - paper content is static
+    staleTime: 15 * 60 * 1000 // 15 minutes - paper content is static
   });
 }
 
@@ -101,7 +101,7 @@ export function usePaperSections(paperId: string) {
       return organizeBlocksIntoSections(blocks);
     },
     enabled: !!paperId,
-    staleTime: 15 * 60 * 1000, // 15 minutes - sections derived from static content
+    staleTime: 15 * 60 * 1000 // 15 minutes - sections derived from static content
   });
 }
 
@@ -116,10 +116,10 @@ export function usePaperData(paperId: string) {
 
   // Check if we have any cached data
   const hasCachedData = !!(paperQuery.data || blocksQuery.data || sectionsQuery.data);
-  
+
   // Only show loading if we have no cached data at all
   const isInitialLoading = !hasCachedData && (paperQuery.isLoading || blocksQuery.isLoading || sectionsQuery.isLoading);
-  
+
   // Show loading for background refetches only if explicitly fetching
   const isRefetching = paperQuery.isFetching || blocksQuery.isFetching || sectionsQuery.isFetching;
 
@@ -134,7 +134,7 @@ export function usePaperData(paperId: string) {
     isSuccess: paperQuery.isSuccess && blocksQuery.isSuccess && sectionsQuery.isSuccess,
     // Additional state for better UX
     hasCachedData,
-    isStale: paperQuery.isStale || blocksQuery.isStale || sectionsQuery.isStale,
+    isStale: paperQuery.isStale || blocksQuery.isStale || sectionsQuery.isStale
   };
 }
 
@@ -149,14 +149,14 @@ export function usePrefetchPaper() {
     queryClient.prefetchQuery({
       queryKey: paperKeys.detail(paperId),
       queryFn: () => api.getPaper(paperId),
-      staleTime: 5 * 60 * 1000,
+      staleTime: 5 * 60 * 1000
     });
 
     // Prefetch paper blocks
     queryClient.prefetchQuery({
       queryKey: paperKeys.blocks(paperId),
       queryFn: () => api.getPaperBlocksForUI(paperId),
-      staleTime: 5 * 60 * 1000,
+      staleTime: 5 * 60 * 1000
     });
 
     // Prefetch paper sections
@@ -166,7 +166,7 @@ export function usePrefetchPaper() {
         const blocks = await api.getPaperBlocksForUI(paperId);
         return organizeBlocksIntoSections(blocks);
       },
-      staleTime: 5 * 60 * 1000,
+      staleTime: 5 * 60 * 1000
     });
   };
 
@@ -188,7 +188,7 @@ export function usePrefetchAdjacentSections() {
           const blocks = await api.getPaperBlocksForUI(paperId);
           return organizeBlocksIntoSections(blocks);
         },
-        staleTime: 10 * 60 * 1000,
+        staleTime: 10 * 60 * 1000
       });
     }
 
@@ -200,7 +200,7 @@ export function usePrefetchAdjacentSections() {
           const blocks = await api.getPaperBlocksForUI(paperId);
           return organizeBlocksIntoSections(blocks);
         },
-        staleTime: 10 * 60 * 1000,
+        staleTime: 10 * 60 * 1000
       });
     }
   };
@@ -223,4 +223,4 @@ export function useInvalidatePaper() {
   };
 
   return { invalidatePaper, invalidateAllPapers };
-} 
+}

@@ -1,8 +1,8 @@
 "use client";
 
-import React from 'react';
-import { useSelection } from '@/contexts/selection-context';
-import { cn } from '@/lib/utils';
+import React from "react";
+import { useSelection } from "@/contexts/selection-context";
+import { cn } from "@/lib/utils";
 
 interface SelectableBlockWrapperProps {
   blockId: string;
@@ -37,16 +37,9 @@ export function SelectableBlockWrapper({ blockId, children, className }: Selecta
       )}
       onClick={handleClick}
     >
-      <div className={cn(
-        "transition-opacity duration-200",
-        isSelectionMode && !isSelected && "opacity-70"
-      )}>
-        {children}
-      </div>
+      <div className={cn("transition-opacity duration-200", isSelectionMode && !isSelected && "opacity-70")}>{children}</div>
 
-      {isSelected && isSelectionMode && (
-        <div className="absolute inset-0 pointer-events-none bg-primary/5 rounded-lg" />
-      )}
+      {isSelected && isSelectionMode && <div className="absolute inset-0 pointer-events-none bg-primary/5 rounded-lg" />}
     </div>
   );
-} 
+}

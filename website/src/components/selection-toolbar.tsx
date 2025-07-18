@@ -1,67 +1,66 @@
 "use client";
 
-import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Loader2, Sparkles, X, Languages } from 'lucide-react';
-import { useSelection } from '@/contexts/selection-context';
-import { useCreateSummary } from '@/hooks/use-analysis';
-import { api } from '@/lib/api';
-
+import React, { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Loader2, Sparkles, X, Languages } from "lucide-react";
+import { useSelection } from "@/contexts/selection-context";
+import { useCreateSummary } from "@/hooks/use-analysis";
+import { api } from "@/lib/api";
 
 const SUPPORTED_LANGUAGES = [
-  { value: 'en_US', label: 'English (US)' },
-  { value: 'es_ES', label: 'Spanish' },
-  { value: 'fr_FR', label: 'French' },
-  { value: 'de_DE', label: 'German' },
-  { value: 'zh_CN', label: 'Chinese (Simplified)' },
-  { value: 'ja_JP', label: 'Japanese' },
-  { value: 'ko_KR', label: 'Korean' },
+  { value: "en_US", label: "English (US)" },
+  { value: "es_ES", label: "Spanish" },
+  { value: "fr_FR", label: "French" },
+  { value: "de_DE", label: "German" },
+  { value: "zh_CN", label: "Chinese (Simplified)" },
+  { value: "ja_JP", label: "Japanese" },
+  { value: "ko_KR", label: "Korean" }
 ];
 
 export function SelectionToolbar() {
   const { selectedBlockIds, hasSelections, clearSelections } = useSelection();
-  const [selectedLanguage, setSelectedLanguage] = useState('en_US');
-  const [summary, setSummary] = useState('');
+  const [selectedLanguage, setSelectedLanguage] = useState("en_US");
+  const [summary, setSummary] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  
+
   const createSummaryMutation = useCreateSummary();
 
   const handleGenerateSummary = async () => {
     if (!hasSelections) return;
 
-    setSummary('');
+    setSummary("");
     setIsDialogOpen(true);
 
     try {
       const stream = await createSummaryMutation.mutateAsync({
         block_ids: selectedBlockIds,
-        language: selectedLanguage,
+        language: selectedLanguage
       });
 
       // Use the SSE parser to handle the stream
       for await (const { event, data } of api.parseSummaryStream(stream)) {
         switch (event) {
-          case 'start':
+          case "start":
             // Initial message, could show this to user
-            console.log('Summary generation started:', data);
+            console.log("Summary generation started:", data);
             break;
-          case 'chunk':
+          case "chunk":
             // Append the chunk to our summary
-            setSummary(prev => prev + data);
+            setSummary((prev) => prev + data);
             break;
-          case 'completed':
+          case "completed":
             // Summary is complete
-            console.log('Summary generation completed');
+            console.log("Summary generation completed");
             return; // Exit the loop
           default:
-            console.log('Unknown event:', event, data);
+            console.log("Unknown event:", event, data);
         }
       }
     } catch (error) {
-      console.error('Error generating summary:', error);
-      setSummary('Sorry, there was an error generating the summary. Please try again.');
+      console.error("Error generating summary:", error);
+      setSummary("Sorry, there was an error generating the summary. Please try again.");
     }
   };
 
@@ -73,9 +72,7 @@ export function SelectionToolbar() {
     <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50">
       <div className="bg-background border border-border rounded-lg shadow-lg p-4 flex items-center gap-3 min-w-fit">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <span className="bg-primary text-primary-foreground rounded-full px-2 py-1 text-xs font-medium">
-            {selectedBlockIds.length}
-          </span>
+          <span className="bg-primary text-primary-foreground rounded-full px-2 py-1 text-xs font-medium">{selectedBlockIds.length}</span>
           <span>blocks selected</span>
         </div>
 
@@ -116,25 +113,18 @@ export function SelectionToolbar() {
                   </div>
                 ) : (
                   <div className="prose prose-sm dark:prose-invert max-w-none">
-                    <pre className="whitespace-pre-wrap font-sans text-foreground leading-relaxed">
-                      {summary || 'Summary will appear here...'}
-                    </pre>
+                    <pre className="whitespace-pre-wrap font-sans text-foreground leading-relaxed">{summary || "Summary will appear here..."}</pre>
                   </div>
                 )}
               </div>
             </DialogContent>
           </Dialog>
 
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={clearSelections}
-            className="text-muted-foreground hover:text-foreground"
-          >
+          <Button variant="outline" size="sm" onClick={clearSelections} className="text-muted-foreground hover:text-foreground">
             <X className="w-4 h-4" />
           </Button>
         </div>
       </div>
     </div>
   );
-} 
+}

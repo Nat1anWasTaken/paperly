@@ -2,14 +2,7 @@
 
 import { useState, useCallback, useRef, useEffect } from "react";
 import { Upload, FileText, Clock, Trash2, Eye, CheckCircle, AlertCircle, Loader2, Copy } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -32,10 +25,10 @@ export function UploadModal({ trigger }: UploadModalProps) {
   useEffect(() => {
     const storedAnalyses = AnalysisStorage.getAll();
     setUploadHistory(storedAnalyses);
-    
+
     // Resume monitoring for any in-progress analyses
     const processingAnalyses = AnalysisStorage.getProcessing();
-    processingAnalyses.forEach(analysis => {
+    processingAnalyses.forEach((analysis) => {
       if (analysis.analysisId && !monitoringRef.current.has(analysis.analysisId)) {
         monitorAnalysis(analysis.id, analysis.analysisId);
       }
@@ -45,15 +38,15 @@ export function UploadModal({ trigger }: UploadModalProps) {
   // Monitor analysis progress
   const monitorAnalysis = useCallback(async (id: string, analysisId: string) => {
     if (monitoringRef.current.has(analysisId)) return;
-    
+
     monitoringRef.current.add(analysisId);
-    
+
     try {
       while (true) {
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+
         const analysis = await api.getAnalysis(analysisId);
-        
+
         const progressMap: Record<AnalysisStatus, number> = {
           created: 10,
           extracting_markdown: 20,
@@ -64,35 +57,35 @@ export function UploadModal({ trigger }: UploadModalProps) {
           blocks_processed: 85,
           generating_quizzes: 95,
           completed: 100,
-          errored: 0,
+          errored: 0
         };
 
         const progress = progressMap[analysis.status] || 0;
-        
+
         const updates: Partial<StoredAnalysis> = {
-          status: analysis.status === 'completed' ? 'ready' : analysis.status === 'errored' ? 'error' : 'analyzing',
+          status: analysis.status === "completed" ? "ready" : analysis.status === "errored" ? "error" : "analyzing",
           analysisStatus: analysis.status,
           progress,
-          paperId: analysis.paper_id,
+          paperId: analysis.paper_id
         };
 
-        if (analysis.status === 'errored') {
-          updates.errorMessage = 'Analysis failed';
+        if (analysis.status === "errored") {
+          updates.errorMessage = "Analysis failed";
         }
 
         AnalysisStorage.update(id, updates);
         setUploadHistory(AnalysisStorage.getAll());
 
-        if (analysis.status === 'completed' || analysis.status === 'errored') {
+        if (analysis.status === "completed" || analysis.status === "errored") {
           monitoringRef.current.delete(analysisId);
           break;
         }
       }
     } catch (error) {
-      console.error('Error monitoring analysis:', error);
+      console.error("Error monitoring analysis:", error);
       AnalysisStorage.update(id, {
-        status: 'error',
-        errorMessage: 'Failed to monitor analysis progress',
+        status: "error",
+        errorMessage: "Failed to monitor analysis progress"
       });
       setUploadHistory(AnalysisStorage.getAll());
       monitoringRef.current.delete(analysisId);
@@ -121,16 +114,16 @@ export function UploadModal({ trigger }: UploadModalProps) {
   const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     handleFiles(files);
-    
+
     // Clear the input so the same file can be selected again
     if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+      fileInputRef.current.value = "";
     }
   };
 
   const handleFiles = useCallback(async (files: File[]) => {
-    const pdfFiles = files.filter(file => file.type === "application/pdf");
-    
+    const pdfFiles = files.filter((file) => file.type === "application/pdf");
+
     if (pdfFiles.length === 0) {
       alert("Please upload PDF files only.");
       return;
@@ -142,56 +135,58 @@ export function UploadModal({ trigger }: UploadModalProps) {
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const uploadFile = useCallback(async (file: File) => {
-    const newAnalysisId = Date.now().toString();
-    
-    // Create initial stored analysis
-    const initialAnalysis: StoredAnalysis = {
-      id: newAnalysisId,
-      analysisId: '', // Will be set after API call
-      fileName: file.name,
-      fileSize: `${(file.size / (1024 * 1024)).toFixed(1)} MB`,
-      uploadDate: new Date().toLocaleString(),
-      status: 'uploading',
-      progress: 0,
-      lastUpdated: new Date().toISOString(),
-    };
+  const uploadFile = useCallback(
+    async (file: File) => {
+      const newAnalysisId = Date.now().toString();
 
-    AnalysisStorage.save(initialAnalysis);
-    setUploadHistory(AnalysisStorage.getAll());
+      // Create initial stored analysis
+      const initialAnalysis: StoredAnalysis = {
+        id: newAnalysisId,
+        analysisId: "", // Will be set after API call
+        fileName: file.name,
+        fileSize: `${(file.size / (1024 * 1024)).toFixed(1)} MB`,
+        uploadDate: new Date().toLocaleString(),
+        status: "uploading",
+        progress: 0,
+        lastUpdated: new Date().toISOString()
+      };
 
-    try {
-      const result = await uploadAndAnalyzePaper(file, (progress: UploadProgress) => {
-        const updates: Partial<StoredAnalysis> = {
-          status: progress.stage === 'uploading' ? 'uploading' : 'analyzing',
-          progress: progress.progress,
-          analysisStatus: progress.status,
-        };
-        
-        AnalysisStorage.update(newAnalysisId, updates);
+      AnalysisStorage.save(initialAnalysis);
+      setUploadHistory(AnalysisStorage.getAll());
+
+      try {
+        const result = await uploadAndAnalyzePaper(file, (progress: UploadProgress) => {
+          const updates: Partial<StoredAnalysis> = {
+            status: progress.stage === "uploading" ? "uploading" : "analyzing",
+            progress: progress.progress,
+            analysisStatus: progress.status
+          };
+
+          AnalysisStorage.update(newAnalysisId, updates);
+          setUploadHistory(AnalysisStorage.getAll());
+        });
+
+        // Update with analysis ID and start monitoring
+        AnalysisStorage.update(newAnalysisId, {
+          analysisId: result.analysisId,
+          status: "analyzing"
+        });
         setUploadHistory(AnalysisStorage.getAll());
-      });
 
-      // Update with analysis ID and start monitoring
-      AnalysisStorage.update(newAnalysisId, {
-        analysisId: result.analysisId,
-        status: 'analyzing',
-      });
-      setUploadHistory(AnalysisStorage.getAll());
+        // Start monitoring the analysis
+        monitorAnalysis(newAnalysisId, result.analysisId);
+      } catch (error) {
+        console.error("Upload failed:", error);
 
-      // Start monitoring the analysis
-      monitorAnalysis(newAnalysisId, result.analysisId);
-
-    } catch (error) {
-      console.error('Upload failed:', error);
-      
-      AnalysisStorage.update(newAnalysisId, {
-        status: 'error',
-        errorMessage: error instanceof Error ? error.message : 'Upload failed',
-      });
-      setUploadHistory(AnalysisStorage.getAll());
-    }
-  }, [monitorAnalysis, setUploadHistory]);
+        AnalysisStorage.update(newAnalysisId, {
+          status: "error",
+          errorMessage: error instanceof Error ? error.message : "Upload failed"
+        });
+        setUploadHistory(AnalysisStorage.getAll());
+      }
+    },
+    [monitorAnalysis, setUploadHistory]
+  );
 
   const deletePaper = (id: string) => {
     AnalysisStorage.delete(id);
@@ -199,8 +194,8 @@ export function UploadModal({ trigger }: UploadModalProps) {
   };
 
   const viewPaper = (analysis: StoredAnalysis) => {
-    if (analysis.paperId && analysis.status === 'ready') {
-      window.open(`/${analysis.paperId}`, '_blank');
+    if (analysis.paperId && analysis.status === "ready") {
+      window.open(`/${analysis.paperId}`, "_blank");
     }
   };
 
@@ -211,52 +206,48 @@ export function UploadModal({ trigger }: UploadModalProps) {
 
   const getStatusIcon = (analysis: StoredAnalysis) => {
     switch (analysis.status) {
-      case 'uploading':
+      case "uploading":
         return <Loader2 className="w-4 h-4 text-blue-500 animate-spin" />;
-      case 'analyzing':
+      case "analyzing":
         return <Loader2 className="w-4 h-4 text-yellow-500 animate-spin" />;
-      case 'ready':
+      case "ready":
         return <CheckCircle className="w-4 h-4 text-green-500" />;
-      case 'error':
+      case "error":
         return <AlertCircle className="w-4 h-4 text-red-500" />;
     }
   };
 
   const getStatusText = (analysis: StoredAnalysis) => {
     switch (analysis.status) {
-      case 'uploading':
+      case "uploading":
         return `Uploading... ${analysis.progress || 0}%`;
-      case 'analyzing':
-        return analysis.analysisStatus ? 
-          getAnalysisStatusText(analysis.analysisStatus) + ` ${analysis.progress || 0}%` :
-          `Analyzing... ${analysis.progress || 0}%`;
-      case 'ready':
-        return 'Ready to view';
-      case 'error':
-        return analysis.errorMessage || 'Upload failed';
+      case "analyzing":
+        return analysis.analysisStatus ? getAnalysisStatusText(analysis.analysisStatus) + ` ${analysis.progress || 0}%` : `Analyzing... ${analysis.progress || 0}%`;
+      case "ready":
+        return "Ready to view";
+      case "error":
+        return analysis.errorMessage || "Upload failed";
     }
   };
 
   const getAnalysisStatusText = (status: AnalysisStatus): string => {
     const statusTexts: Record<AnalysisStatus, string> = {
-      created: 'Starting analysis...',
-      extracting_markdown: 'Extracting text...',
-      markdown_extracted: 'Text extracted...',
-      generating_metadata: 'Generating metadata...',
-      metadata_generated: 'Metadata generated...',
-      processing_into_blocks: 'Processing blocks...',
-      blocks_processed: 'Blocks processed...',
-      generating_quizzes: 'Generating quizzes...',
-      completed: 'Complete!',
-      errored: 'Analysis failed',
+      created: "Starting analysis...",
+      extracting_markdown: "Extracting text...",
+      markdown_extracted: "Text extracted...",
+      generating_metadata: "Generating metadata...",
+      metadata_generated: "Metadata generated...",
+      processing_into_blocks: "Processing blocks...",
+      blocks_processed: "Blocks processed...",
+      generating_quizzes: "Generating quizzes...",
+      completed: "Complete!",
+      errored: "Analysis failed"
     };
-    
-    return statusTexts[status] || 'Processing...';
+
+    return statusTexts[status] || "Processing...";
   };
 
-  const isUploading = uploadHistory.some(analysis => 
-    analysis.status === 'uploading' || analysis.status === 'analyzing'
-  );
+  const isUploading = uploadHistory.some((analysis) => analysis.status === "uploading" || analysis.status === "analyzing");
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -271,9 +262,7 @@ export function UploadModal({ trigger }: UploadModalProps) {
       <DialogContent className="max-w-2xl max-h-[80vh]">
         <DialogHeader>
           <DialogTitle className="text-foreground">Upload Academic Paper</DialogTitle>
-          <DialogDescription>
-            Upload PDF files to analyze and make them easier to read with Paperly
-          </DialogDescription>
+          <DialogDescription>Upload PDF files to analyze and make them easier to read with Paperly</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6">
@@ -282,39 +271,20 @@ export function UploadModal({ trigger }: UploadModalProps) {
             <Label className="text-sm font-medium text-foreground">Upload PDF</Label>
             <div
               className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
-                dragActive 
-                  ? 'border-primary bg-primary/5' 
-                  : 'border-border hover:border-primary/50'
-              } ${isUploading ? 'opacity-50 pointer-events-none' : ''}`}
+                dragActive ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
+              } ${isUploading ? "opacity-50 pointer-events-none" : ""}`}
               onDragEnter={handleDrag}
               onDragLeave={handleDrag}
               onDragOver={handleDrag}
               onDrop={handleDrop}
             >
               <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
-              <p className="text-foreground font-medium mb-1">
-                {isUploading ? 'Processing uploads...' : 'Drop PDF files here or click to browse'}
-              </p>
-              <p className="text-sm text-muted-foreground mb-4">
-                Supports PDF files up to 50MB
-              </p>
-              <Input
-                ref={fileInputRef}
-                type="file"
-                accept=".pdf"
-                multiple
-                onChange={handleFileInput}
-                className="hidden"
-                id="file-upload"
-                disabled={isUploading}
-              />
+              <p className="text-foreground font-medium mb-1">{isUploading ? "Processing uploads..." : "Drop PDF files here or click to browse"}</p>
+              <p className="text-sm text-muted-foreground mb-4">Supports PDF files up to 50MB</p>
+              <Input ref={fileInputRef} type="file" accept=".pdf" multiple onChange={handleFileInput} className="hidden" id="file-upload" disabled={isUploading} />
               <Label htmlFor="file-upload" className="cursor-pointer">
-                <Button 
-                  variant="outline" 
-                  className="pointer-events-none"
-                  disabled={isUploading}
-                >
-                  {isUploading ? 'Processing...' : 'Choose Files'}
+                <Button variant="outline" className="pointer-events-none" disabled={isUploading}>
+                  {isUploading ? "Processing..." : "Choose Files"}
                 </Button>
               </Label>
             </div>
@@ -326,80 +296,57 @@ export function UploadModal({ trigger }: UploadModalProps) {
               <Clock className="w-4 h-4 text-muted-foreground" />
               <Label className="text-sm font-medium text-foreground">Recent Uploads</Label>
             </div>
-            
+
             <ScrollArea className="h-48 border rounded-lg">
               <div className="p-3 space-y-2">
                 {uploadHistory.length === 0 ? (
-                  <p className="text-center text-muted-foreground text-sm py-8">
-                    No papers uploaded yet
-                  </p>
+                  <p className="text-center text-muted-foreground text-sm py-8">No papers uploaded yet</p>
                 ) : (
                   uploadHistory.map((analysis) => (
-                    <div
-                      key={analysis.id}
-                      className="flex items-center gap-3 p-3 bg-card rounded-lg border hover:bg-accent/50 transition-colors"
-                    >
+                    <div key={analysis.id} className="flex items-center gap-3 p-3 bg-card rounded-lg border hover:bg-accent/50 transition-colors">
                       <FileText className="w-4 h-4 text-primary" />
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-foreground truncate">
-                          {analysis.fileName}
-                        </p>
+                        <p className="text-sm font-medium text-foreground truncate">{analysis.fileName}</p>
                         <div className="flex items-center gap-2 mt-1">
                           {getStatusIcon(analysis)}
                           <span className="text-xs text-muted-foreground">
                             {getStatusText(analysis)} • {analysis.fileSize} • {analysis.uploadDate}
                           </span>
                         </div>
-                        
+
                         {/* Analysis ID display */}
                         {analysis.analysisId && (
                           <div className="flex items-center gap-2 mt-1">
-                            <span className="text-xs text-muted-foreground font-mono">
-                              ID: {analysis.analysisId.slice(0, 8)}...
-                            </span>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-4 w-4 p-0"
-                              onClick={() => copyAnalysisId(analysis.analysisId)}
-                              title="Copy full analysis ID"
-                            >
+                            <span className="text-xs text-muted-foreground font-mono">ID: {analysis.analysisId.slice(0, 8)}...</span>
+                            <Button variant="ghost" size="icon" className="h-4 w-4 p-0" onClick={() => copyAnalysisId(analysis.analysisId)} title="Copy full analysis ID">
                               <Copy className="w-3 h-3" />
                             </Button>
                           </div>
                         )}
-                        
+
                         {/* Progress bar for active uploads */}
-                        {(analysis.status === 'uploading' || analysis.status === 'analyzing') && (
+                        {(analysis.status === "uploading" || analysis.status === "analyzing") && (
                           <div className="w-full bg-muted rounded-full h-1.5 mt-2">
-                            <div 
-                              className={`h-1.5 rounded-full transition-all duration-300 ${
-                                analysis.status === 'uploading' ? 'bg-blue-500' : 'bg-yellow-500'
-                              }`}
+                            <div
+                              className={`h-1.5 rounded-full transition-all duration-300 ${analysis.status === "uploading" ? "bg-blue-500" : "bg-yellow-500"}`}
                               style={{ width: `${analysis.progress || 0}%` }}
                             />
                           </div>
                         )}
                       </div>
-                      
+
                       <div className="flex items-center gap-1">
-                        {analysis.status === 'ready' && (
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-8 w-8"
-                            onClick={() => viewPaper(analysis)}
-                            title="View paper"
-                          >
+                        {analysis.status === "ready" && (
+                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => viewPaper(analysis)} title="View paper">
                             <Eye className="w-3 h-3" />
                           </Button>
                         )}
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
+                        <Button
+                          variant="ghost"
+                          size="icon"
                           className="h-8 w-8 text-muted-foreground hover:text-destructive"
                           onClick={() => deletePaper(analysis.id)}
-                          disabled={analysis.status === 'uploading' || analysis.status === 'analyzing'}
+                          disabled={analysis.status === "uploading" || analysis.status === "analyzing"}
                           title="Delete"
                         >
                           <Trash2 className="w-3 h-3" />

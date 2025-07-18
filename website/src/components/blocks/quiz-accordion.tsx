@@ -10,7 +10,7 @@ interface QuizAccordionProps {
 
 export function QuizAccordion({ quizBlocks }: QuizAccordionProps) {
   if (quizBlocks.length === 0) return null;
-  
+
   // If only one quiz, render it normally without accordion
   if (quizBlocks.length === 1) {
     return <QuizBlockComponent block={quizBlocks[0]} />;
@@ -18,17 +18,13 @@ export function QuizAccordion({ quizBlocks }: QuizAccordionProps) {
 
   return (
     <div className="my-6">
-      <h3 className="text-lg font-semibold mb-4 text-foreground">
-        Quiz Section ({quizBlocks.length} questions)
-      </h3>
+      <h3 className="text-lg font-semibold mb-4 text-foreground">Quiz Section ({quizBlocks.length} questions)</h3>
       <Accordion type="single" collapsible className="w-full">
         {quizBlocks.map((quiz, index) => (
           <AccordionItem key={quiz.id} value={quiz.id}>
             <AccordionTrigger className="text-left">
               <span className="text-sm font-medium">
-                Question {index + 1}: {quiz.question.length > 60 
-                  ? quiz.question.substring(0, 60) + "..." 
-                  : quiz.question}
+                Question {index + 1}: {quiz.question.length > 60 ? quiz.question.substring(0, 60) + "..." : quiz.question}
               </span>
             </AccordionTrigger>
             <AccordionContent>

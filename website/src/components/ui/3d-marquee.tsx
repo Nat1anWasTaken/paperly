@@ -3,32 +3,21 @@
 import { motion } from "motion/react";
 import { cn } from "@/lib/utils";
 
-export const ThreeDMarquee = ({
-  images,
-  className,
-}: {
-  images: string[];
-  className?: string;
-}) => {
+export const ThreeDMarquee = ({ images, className }: { images: string[]; className?: string }) => {
   // Split the images array into 4 equal parts
   const chunkSize = Math.ceil(images.length / 4);
   const chunks = Array.from({ length: 4 }, (_, colIndex) => {
     const start = colIndex * chunkSize;
     return images.slice(start, start + chunkSize);
   });
-  
+
   return (
-    <div
-      className={cn(
-        "mx-auto block h-[600px] overflow-hidden rounded-2xl max-sm:h-100",
-        className,
-      )}
-    >
+    <div className={cn("mx-auto block h-[600px] overflow-hidden rounded-2xl max-sm:h-100", className)}>
       <div className="flex size-full items-center justify-center">
         <div className="size-[1720px] shrink-0 scale-50 sm:scale-75 lg:scale-100">
           <div
             style={{
-              transform: "rotateX(55deg) rotateY(0deg) rotateZ(-45deg)",
+              transform: "rotateX(55deg) rotateY(0deg) rotateZ(-45deg)"
             }}
             className="relative top-96 right-[50%] grid size-full origin-top-left grid-cols-4 gap-8 transform-3d"
           >
@@ -38,7 +27,7 @@ export const ThreeDMarquee = ({
                 transition={{
                   duration: colIndex % 2 === 0 ? 10 : 15,
                   repeat: Infinity,
-                  repeatType: "reverse",
+                  repeatType: "reverse"
                 }}
                 key={colIndex + "marquee"}
                 className="flex flex-col items-start gap-8"
@@ -49,11 +38,11 @@ export const ThreeDMarquee = ({
                     <GridLineHorizontal className="-top-4" offset="20px" />
                     <motion.img
                       whileHover={{
-                        y: -10,
+                        y: -10
                       }}
                       transition={{
                         duration: 0.3,
-                        ease: "easeInOut",
+                        ease: "easeInOut"
                       }}
                       key={imageIndex + image}
                       src={image}
@@ -73,13 +62,7 @@ export const ThreeDMarquee = ({
   );
 };
 
-const GridLineHorizontal = ({
-  className,
-  offset,
-}: {
-  className?: string;
-  offset?: string;
-}) => {
+const GridLineHorizontal = ({ className, offset }: { className?: string; offset?: string }) => {
   return (
     <div
       style={
@@ -91,7 +74,7 @@ const GridLineHorizontal = ({
           "--fade-stop": "90%",
           "--offset": offset || "200px", //-100px if you want to keep the line inside
           "--color-dark": "rgba(255, 255, 255, 0.2)",
-          maskComposite: "exclude",
+          maskComposite: "exclude"
         } as React.CSSProperties
       }
       className={cn(
@@ -102,19 +85,13 @@ const GridLineHorizontal = ({
         "[mask-composite:exclude]",
         "z-30",
         "dark:bg-[linear-gradient(to_right,var(--color-dark),var(--color-dark)_50%,transparent_0,transparent)]",
-        className,
+        className
       )}
     ></div>
   );
 };
 
-const GridLineVertical = ({
-  className,
-  offset,
-}: {
-  className?: string;
-  offset?: string;
-}) => {
+const GridLineVertical = ({ className, offset }: { className?: string; offset?: string }) => {
   return (
     <div
       style={
@@ -126,7 +103,7 @@ const GridLineVertical = ({
           "--fade-stop": "90%",
           "--offset": offset || "150px", //-100px if you want to keep the line inside
           "--color-dark": "rgba(255, 255, 255, 0.2)",
-          maskComposite: "exclude",
+          maskComposite: "exclude"
         } as React.CSSProperties
       }
       className={cn(
@@ -137,8 +114,8 @@ const GridLineVertical = ({
         "[mask-composite:exclude]",
         "z-30",
         "dark:bg-[linear-gradient(to_bottom,var(--color-dark),var(--color-dark)_50%,transparent_0,transparent)]",
-        className,
+        className
       )}
     ></div>
   );
-}; 
+};

@@ -1,5 +1,5 @@
 // LocalStorage utilities for managing analysis data
-import { AnalysisStatus } from './api';
+import { AnalysisStatus } from "./api";
 
 export interface StoredAnalysis {
   id: string;
@@ -8,14 +8,14 @@ export interface StoredAnalysis {
   fileName: string;
   fileSize: string;
   uploadDate: string;
-  status: 'uploading' | 'analyzing' | 'ready' | 'error';
+  status: "uploading" | "analyzing" | "ready" | "error";
   analysisStatus?: AnalysisStatus;
   progress?: number;
   errorMessage?: string;
   lastUpdated: string;
 }
 
-const STORAGE_KEY = 'paperly_analyses';
+const STORAGE_KEY = "paperly_analyses";
 
 export class AnalysisStorage {
   /**
@@ -26,7 +26,7 @@ export class AnalysisStorage {
       const stored = localStorage.getItem(STORAGE_KEY);
       return stored ? JSON.parse(stored) : [];
     } catch (error) {
-      console.error('Error reading analyses from localStorage:', error);
+      console.error("Error reading analyses from localStorage:", error);
       return [];
     }
   }
@@ -37,20 +37,20 @@ export class AnalysisStorage {
   static save(analysis: StoredAnalysis): void {
     try {
       const analyses = this.getAll();
-      const existingIndex = analyses.findIndex(a => a.id === analysis.id);
-      
+      const existingIndex = analyses.findIndex((a) => a.id === analysis.id);
+
       if (existingIndex >= 0) {
         analyses[existingIndex] = { ...analysis, lastUpdated: new Date().toISOString() };
       } else {
         analyses.unshift({ ...analysis, lastUpdated: new Date().toISOString() });
       }
-      
+
       // Keep only the last 50 analyses to avoid localStorage bloat
       const trimmedAnalyses = analyses.slice(0, 50);
-      
+
       localStorage.setItem(STORAGE_KEY, JSON.stringify(trimmedAnalyses));
     } catch (error) {
-      console.error('Error saving analysis to localStorage:', error);
+      console.error("Error saving analysis to localStorage:", error);
     }
   }
 
@@ -60,18 +60,18 @@ export class AnalysisStorage {
   static update(id: string, updates: Partial<StoredAnalysis>): void {
     try {
       const analyses = this.getAll();
-      const existingIndex = analyses.findIndex(a => a.id === id);
-      
+      const existingIndex = analyses.findIndex((a) => a.id === id);
+
       if (existingIndex >= 0) {
-        analyses[existingIndex] = { 
-          ...analyses[existingIndex], 
-          ...updates, 
-          lastUpdated: new Date().toISOString() 
+        analyses[existingIndex] = {
+          ...analyses[existingIndex],
+          ...updates,
+          lastUpdated: new Date().toISOString()
         };
         localStorage.setItem(STORAGE_KEY, JSON.stringify(analyses));
       }
     } catch (error) {
-      console.error('Error updating analysis in localStorage:', error);
+      console.error("Error updating analysis in localStorage:", error);
     }
   }
 
@@ -81,10 +81,10 @@ export class AnalysisStorage {
   static delete(id: string): void {
     try {
       const analyses = this.getAll();
-      const filtered = analyses.filter(a => a.id !== id);
+      const filtered = analyses.filter((a) => a.id !== id);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered));
     } catch (error) {
-      console.error('Error deleting analysis from localStorage:', error);
+      console.error("Error deleting analysis from localStorage:", error);
     }
   }
 
@@ -93,7 +93,7 @@ export class AnalysisStorage {
    */
   static getById(id: string): StoredAnalysis | null {
     const analyses = this.getAll();
-    return analyses.find(a => a.id === id) || null;
+    return analyses.find((a) => a.id === id) || null;
   }
 
   /**
@@ -101,11 +101,7 @@ export class AnalysisStorage {
    */
   static getProcessing(): StoredAnalysis[] {
     const analyses = this.getAll();
-    return analyses.filter(a => 
-      a.status === 'uploading' || 
-      a.status === 'analyzing' || 
-      (a.analysisStatus && !['completed', 'errored'].includes(a.analysisStatus))
-    );
+    return analyses.filter((a) => a.status === "uploading" || a.status === "analyzing" || (a.analysisStatus && !["completed", "errored"].includes(a.analysisStatus)));
   }
 
   /**
@@ -115,7 +111,7 @@ export class AnalysisStorage {
     try {
       localStorage.removeItem(STORAGE_KEY);
     } catch (error) {
-      console.error('Error clearing analyses from localStorage:', error);
+      console.error("Error clearing analyses from localStorage:", error);
     }
   }
 
@@ -138,8 +134,8 @@ export class AnalysisStorage {
       }
       return false;
     } catch (error) {
-      console.error('Error importing analyses:', error);
+      console.error("Error importing analyses:", error);
       return false;
     }
   }
-} 
+}

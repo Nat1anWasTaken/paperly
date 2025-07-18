@@ -26,37 +26,31 @@ const generatePsychologyImagePaths = (paperId: string, maxPages: number) => {
 const papers = [
   {
     title: "Attention Is All You Need",
-    subtitle:
-      "Transformers: A Revolutionary Architecture for Natural Language Processing",
-    images: generateImagePaths("1706.03762v7", 15),
+    subtitle: "Transformers: A Revolutionary Architecture for Natural Language Processing",
+    images: generateImagePaths("1706.03762v7", 15)
   },
   {
     title: "PLOS ONE Research Paper",
     subtitle: "Computational Biology and Interdisciplinary Research Methods",
-    images: generateImagePaths("journal.pone.0283170", 10),
+    images: generateImagePaths("journal.pone.0283170", 10)
   },
   {
     title: "Educational Technology Research",
     subtitle: "Smart Learning Environments and Digital Innovation",
-    images: generateImagePaths("s40561-025-00377-2", 28),
+    images: generateImagePaths("s40561-025-00377-2", 28)
   },
   {
     title: "Using Thematic Analysis in Psychology",
     subtitle: "Qualitative Research Methods and Data Analysis Techniques",
-    images: generatePsychologyImagePaths(
-      "Using_thematic_analysis_in_psychology_page",
-      43
-    ),
-  },
+    images: generatePsychologyImagePaths("Using_thematic_analysis_in_psychology_page", 43)
+  }
 ];
 
 interface PaperScrollAnimationProps {
   actionButton: React.ReactNode;
 }
 
-export function PaperScrollAnimation({
-  actionButton,
-}: PaperScrollAnimationProps) {
+export function PaperScrollAnimation({ actionButton }: PaperScrollAnimationProps) {
   const [imagesLoaded, setImagesLoaded] = useState(false);
   const [loadedImages, setLoadedImages] = useState(new Set());
 
@@ -99,14 +93,12 @@ export function PaperScrollAnimation({
         <div className="text-center">
           <div className="loading-spinner mb-4"></div>
           <h1 className="text-4xl font-bold text-foreground mb-4">PAPERLY</h1>
-          <p className="text-lg text-muted-foreground mb-4">
-            Loading papers...
-          </p>
+          <p className="text-lg text-muted-foreground mb-4">Loading papers...</p>
           <div className="w-64 bg-muted rounded-full h-2">
             <div
               className="bg-primary h-2 rounded-full transition-all duration-300"
               style={{
-                width: `${(loadedImages.size / allImages.length) * 100}%`,
+                width: `${(loadedImages.size / allImages.length) * 100}%`
               }}
             ></div>
           </div>
@@ -151,17 +143,13 @@ export function PaperScrollAnimation({
         <div className="bg-background/90 backdrop-blur-sm px-8 py-6 border border-border/20 shadow-lg">
           <h1 className="text-5xl font-bold text-foreground mb-4">PAPERLY</h1>
           <div className="bg-muted/80 backdrop-blur-sm px-4 py-2 border border-border/10">
-            <p className="text-lg text-muted-foreground">
-              Making academic papers easier to read and learn
-            </p>
+            <p className="text-lg text-muted-foreground">Making academic papers easier to read and learn</p>
           </div>
         </div>
       </div>
 
       {/* Action button (Upload Paper or other action) */}
-      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-20">
-        {actionButton}
-      </div>
+      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-20">{actionButton}</div>
     </div>
   );
 }

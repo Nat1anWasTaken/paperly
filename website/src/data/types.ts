@@ -9,7 +9,7 @@ export enum BlockKind {
   CALLOUT = "callout",
   REFERENCE = "reference",
   FOOTNOTE = "footnote",
-  QUIZ = "quiz",
+  QUIZ = "quiz"
 }
 
 // API Response Types - matching OpenAPI schema
@@ -114,17 +114,17 @@ export interface ApiQuizBlock extends ApiBaseBlock {
 }
 
 // Union type for all API block types
-export type ApiPaperBlock = 
-  | ApiParagraphBlock 
-  | ApiHeaderBlock 
-  | ApiFigureBlock 
-  | ApiTableBlock 
-  | ApiEquationBlock 
-  | ApiCodeBlockBlock 
-  | ApiQuoteBlock 
-  | ApiCalloutBlock 
-  | ApiReferenceBlock 
-  | ApiFootnoteBlock 
+export type ApiPaperBlock =
+  | ApiParagraphBlock
+  | ApiHeaderBlock
+  | ApiFigureBlock
+  | ApiTableBlock
+  | ApiEquationBlock
+  | ApiCodeBlockBlock
+  | ApiQuoteBlock
+  | ApiCalloutBlock
+  | ApiReferenceBlock
+  | ApiFootnoteBlock
   | ApiQuizBlock;
 
 // API Response type
@@ -224,18 +224,7 @@ export interface QuizBlock extends BaseBlock {
 }
 
 // Union type for all frontend block types
-export type PaperBlock = 
-  | ParagraphBlock 
-  | HeaderBlock 
-  | FigureBlock 
-  | TableBlock 
-  | EquationBlock 
-  | CodeBlockBlock 
-  | QuoteBlock 
-  | CalloutBlock 
-  | ReferenceBlock 
-  | FootnoteBlock 
-  | QuizBlock;
+export type PaperBlock = ParagraphBlock | HeaderBlock | FigureBlock | TableBlock | EquationBlock | CodeBlockBlock | QuoteBlock | CalloutBlock | ReferenceBlock | FootnoteBlock | QuizBlock;
 
 // Utility function to convert API blocks to frontend blocks
 export function convertApiBlockToFrontendBlock(apiBlock: ApiPaperBlock, index: number): PaperBlock {
@@ -243,7 +232,7 @@ export function convertApiBlockToFrontendBlock(apiBlock: ApiPaperBlock, index: n
     id: apiBlock._id || `block-${index}`,
     kind: apiBlock.kind,
     paper_id: apiBlock.paper.id,
-    index,
+    index
   };
 
   switch (apiBlock.kind) {
@@ -291,4 +280,4 @@ export interface PaperData {
   paper: FrontendPaper;
   totalPages: number;
   pages: PaperPage[];
-} 
+}

@@ -16,9 +16,14 @@ export function ReferenceBlockComponent({ block }: ReferenceBlockProps) {
         {block.issue && `, Issue ${block.issue}`}
         {block.pages && `, pp. ${block.pages}`}
         {block.doi && (
-          <>. <a href={`https://doi.org/${block.doi}`} className="text-primary hover:underline" target="_blank" rel="noopener noreferrer">DOI: {block.doi}</a></>
+          <>
+            .{" "}
+            <a href={`https://doi.org/${block.doi}`} className="text-primary hover:underline" target="_blank" rel="noopener noreferrer">
+              DOI: {block.doi}
+            </a>
+          </>
         )}
       </div>
     </div>
   );
-} 
+}

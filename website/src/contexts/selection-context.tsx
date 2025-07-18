@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback } from "react";
 
 interface SelectionContextType {
   selectedBlockIds: string[];
@@ -26,18 +26,21 @@ export function SelectionProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const toggleBlockSelection = useCallback((blockId: string) => {
-    setSelectedBlockIds(prev => {
+    setSelectedBlockIds((prev) => {
       if (prev.includes(blockId)) {
-        return prev.filter(id => id !== blockId);
+        return prev.filter((id) => id !== blockId);
       } else {
         return [...prev, blockId];
       }
     });
   }, []);
 
-  const isBlockSelected = useCallback((blockId: string) => {
-    return selectedBlockIds.includes(blockId);
-  }, [selectedBlockIds]);
+  const isBlockSelected = useCallback(
+    (blockId: string) => {
+      return selectedBlockIds.includes(blockId);
+    },
+    [selectedBlockIds]
+  );
 
   const clearSelections = useCallback(() => {
     setSelectedBlockIds([]);
@@ -52,20 +55,16 @@ export function SelectionProvider({ children }: { children: React.ReactNode }) {
     toggleBlockSelection,
     isBlockSelected,
     clearSelections,
-    hasSelections,
+    hasSelections
   };
 
-  return (
-    <SelectionContext.Provider value={value}>
-      {children}
-    </SelectionContext.Provider>
-  );
+  return <SelectionContext.Provider value={value}>{children}</SelectionContext.Provider>;
 }
 
 export function useSelection() {
   const context = useContext(SelectionContext);
   if (context === undefined) {
-    throw new Error('useSelection must be used within a SelectionProvider');
+    throw new Error("useSelection must be used within a SelectionProvider");
   }
   return context;
-} 
+}

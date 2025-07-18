@@ -13,7 +13,7 @@ export function HeaderBlockComponent({ block }: HeaderBlockProps) {
     3: "text-2xl font-semibold mb-3 mt-5",
     4: "text-xl font-semibold mb-2 mt-4",
     5: "text-lg font-semibold mb-2 mt-3",
-    6: "text-base font-semibold mb-1 mt-2",
+    6: "text-base font-semibold mb-1 mt-2"
   };
 
   const className = classNames[level];

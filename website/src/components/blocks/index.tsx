@@ -24,7 +24,7 @@ export {
   CalloutBlockComponent,
   ReferenceBlockComponent,
   FootnoteBlockComponent,
-  QuizBlockComponent,
+  QuizBlockComponent
 };
 
 // Main block renderer component
@@ -62,9 +62,5 @@ export function BlockRenderer({ block }: BlockRendererProps) {
     }
   };
 
-  return (
-    <SelectableBlockWrapper blockId={block.id}>
-      {renderBlockContent()}
-    </SelectableBlockWrapper>
-  );
+  return <SelectableBlockWrapper blockId={block.id}>{renderBlockContent()}</SelectableBlockWrapper>;
 }

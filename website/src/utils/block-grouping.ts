@@ -1,7 +1,7 @@
 import { PaperBlock, BlockKind, QuizBlock } from "@/data/types";
 
 export interface BlockGroup {
-  type: 'single' | 'quiz-group';
+  type: "single" | "quiz-group";
   blocks: PaperBlock[];
 }
 
@@ -16,15 +16,15 @@ export function groupBlocks(blocks: PaperBlock[]): BlockGroup[] {
       // If we have accumulated quiz blocks, add them as a group
       if (currentQuizGroup.length > 0) {
         groups.push({
-          type: 'quiz-group',
+          type: "quiz-group",
           blocks: currentQuizGroup
         });
         currentQuizGroup = [];
       }
-      
+
       // Add the non-quiz block as a single block group
       groups.push({
-        type: 'single',
+        type: "single",
         blocks: [block]
       });
     }
@@ -33,7 +33,7 @@ export function groupBlocks(blocks: PaperBlock[]): BlockGroup[] {
   // Handle any remaining quiz blocks at the end
   if (currentQuizGroup.length > 0) {
     groups.push({
-      type: 'quiz-group',
+      type: "quiz-group",
       blocks: currentQuizGroup
     });
   }

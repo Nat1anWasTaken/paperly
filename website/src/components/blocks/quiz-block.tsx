@@ -28,12 +28,7 @@ export function QuizBlockComponent({ block }: QuizBlockProps) {
     <div className="space-y-4">
       <p className="text-foreground mb-4 leading-7 font-medium">{block.question}</p>
 
-      <RadioGroup
-        value={selectedAnswer}
-        onValueChange={setSelectedAnswer}
-        disabled={showResult}
-        className="mb-4"
-      >
+      <RadioGroup value={selectedAnswer} onValueChange={setSelectedAnswer} disabled={showResult} className="mb-4">
         {block.options.map((option, index) => (
           <div
             key={index}
@@ -42,49 +37,30 @@ export function QuizBlockComponent({ block }: QuizBlockProps) {
                 ? index === correctAnswerIndex
                   ? "bg-success/10 border-success text-success-foreground"
                   : index === selectedIndex && !isCorrect
-                  ? "bg-error/10 border-error text-error-foreground"
-                  : "bg-card border-border"
+                    ? "bg-error/10 border-error text-error-foreground"
+                    : "bg-card border-border"
                 : selectedAnswer === index.toString()
-                ? "bg-primary/10 border-primary"
-                : "bg-card border-border hover:bg-muted"
+                  ? "bg-primary/10 border-primary"
+                  : "bg-card border-border hover:bg-muted"
             }`}
           >
             <RadioGroupItem value={index.toString()} id={`quiz-${block.id}-${index}`} />
-            <Label
-              htmlFor={`quiz-${block.id}-${index}`}
-              className="flex-1 cursor-pointer text-foreground leading-7"
-            >
+            <Label htmlFor={`quiz-${block.id}-${index}`} className="flex-1 cursor-pointer text-foreground leading-7">
               {option}
             </Label>
-            {showResult && index === correctAnswerIndex && (
-              <span className="text-success font-semibold">✓</span>
-            )}
+            {showResult && index === correctAnswerIndex && <span className="text-success font-semibold">✓</span>}
           </div>
         ))}
       </RadioGroup>
 
       {!showResult ? (
-        <Button
-          onClick={handleSubmit}
-          disabled={!selectedAnswer}
-          className="mb-2"
-        >
+        <Button onClick={handleSubmit} disabled={!selectedAnswer} className="mb-2">
           Submit Answer
         </Button>
       ) : (
         <div className="space-y-3">
-          <div
-            className={`p-3 rounded-lg border ${
-              isCorrect
-                ? "bg-success/10 text-success-foreground border-success"
-                : "bg-error/10 text-error-foreground border-error"
-            }`}
-          >
-            <strong>
-              {isCorrect
-                ? "Correct!"
-                : "Incorrect. The correct answer is: " + correctAnswerText}
-            </strong>
+          <div className={`p-3 rounded-lg border ${isCorrect ? "bg-success/10 text-success-foreground border-success" : "bg-error/10 text-error-foreground border-error"}`}>
+            <strong>{isCorrect ? "Correct!" : "Incorrect. The correct answer is: " + correctAnswerText}</strong>
           </div>
           {block.explanation && (
             <div className="p-3 bg-muted text-muted-foreground rounded-lg border">

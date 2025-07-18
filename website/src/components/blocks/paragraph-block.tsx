@@ -1,8 +1,8 @@
 import { ParagraphBlock } from "@/data/types";
-import { MDXRemote } from 'next-mdx-remote';
-import { serialize } from 'next-mdx-remote/serialize';
-import { useState, useEffect } from 'react';
-import type { MDXRemoteSerializeResult } from 'next-mdx-remote';
+import { MDXRemote } from "next-mdx-remote";
+import { serialize } from "next-mdx-remote/serialize";
+import { useState, useEffect } from "react";
+import type { MDXRemoteSerializeResult } from "next-mdx-remote";
 
 interface ParagraphBlockProps {
   block: ParagraphBlock;
@@ -28,12 +28,12 @@ const mdxComponents = {
       href={href}
       className="text-primary hover:text-primary/80 underline font-medium transition-colors"
       onClick={(e) => {
-        if (href?.startsWith('#')) {
+        if (href?.startsWith("#")) {
           e.preventDefault();
           // Scroll to reference if it exists on the page
           const targetElement = document.getElementById(href.slice(1));
           if (targetElement) {
-            targetElement.scrollIntoView({ behavior: 'smooth' });
+            targetElement.scrollIntoView({ behavior: "smooth" });
           }
         }
       }}
@@ -43,23 +43,25 @@ const mdxComponents = {
     </a>
   ),
   // Custom paragraph to avoid nested paragraphs
-  p: ({ children, ...props }: MDXElementProps) => (
-    <span {...props}>{children}</span>
-  ),
+  p: ({ children, ...props }: MDXElementProps) => <span {...props}>{children}</span>,
   // Bold text
   strong: ({ children, ...props }: MDXElementProps) => (
-    <strong className="font-semibold" {...props}>{children}</strong>
+    <strong className="font-semibold" {...props}>
+      {children}
+    </strong>
   ),
   // Italic text
   em: ({ children, ...props }: MDXElementProps) => (
-    <em className="italic" {...props}>{children}</em>
+    <em className="italic" {...props}>
+      {children}
+    </em>
   ),
   // Code inline
   code: ({ children, ...props }: MDXElementProps) => (
     <code className="bg-muted px-1.5 py-0.5 text-sm font-mono border rounded" {...props}>
       {children}
     </code>
-  ),
+  )
 };
 
 export function ParagraphBlockComponent({ block }: ParagraphBlockProps) {
@@ -74,14 +76,14 @@ export function ParagraphBlockComponent({ block }: ParagraphBlockProps) {
           mdxOptions: {
             remarkPlugins: [],
             rehypePlugins: [],
-            development: process.env.NODE_ENV === 'development',
-          },
+            development: process.env.NODE_ENV === "development"
+          }
         });
         setMdxSource(serialized);
         setError(null);
       } catch (err) {
-        console.error('Error serializing MDX:', err);
-        setError('Failed to render content');
+        console.error("Error serializing MDX:", err);
+        setError("Failed to render content");
         // Fallback to plain text if MDX fails
         setMdxSource(null);
       }
@@ -92,9 +94,7 @@ export function ParagraphBlockComponent({ block }: ParagraphBlockProps) {
 
   return (
     <div className="mb-4">
-      {block.title && (
-        <h4 className="text-lg font-medium mb-2">{block.title}</h4>
-      )}
+      {block.title && <h4 className="text-lg font-medium mb-2">{block.title}</h4>}
       <div className="text-base leading-relaxed">
         {error ? (
           // Fallback to plain text if MDX fails

@@ -17,10 +17,8 @@ export default function PapersPage() {
   // Filter papers based on search query
   const filteredPapers = React.useMemo(() => {
     if (!searchQuery.trim()) return papers;
-    
-    return papers.filter(paper =>
-      paper.title.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+
+    return papers.filter((paper) => paper.title.toLowerCase().includes(searchQuery.toLowerCase()));
   }, [papers, searchQuery]);
 
   const formatDate = (dateString?: string) => {
@@ -29,7 +27,7 @@ export default function PapersPage() {
       return new Date(dateString).toLocaleDateString("en-US", {
         year: "numeric",
         month: "short",
-        day: "numeric",
+        day: "numeric"
       });
     } catch {
       return "Invalid date";
@@ -43,7 +41,7 @@ export default function PapersPage() {
       const now = new Date();
       const diffInMs = now.getTime() - date.getTime();
       const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
-      
+
       if (diffInDays === 0) return "Today";
       if (diffInDays === 1) return "Yesterday";
       if (diffInDays < 7) return `${diffInDays} days ago`;
@@ -133,20 +131,9 @@ export default function PapersPage() {
                 <div className="max-w-md">
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input
-                      type="text"
-                      placeholder="Search papers by title..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-10 pr-10 h-11 text-base"
-                    />
+                    <Input type="text" placeholder="Search papers by title..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-10 pr-10 h-11 text-base" />
                     {searchQuery && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={clearSearch}
-                        className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0 hover:bg-muted"
-                      >
+                      <Button variant="ghost" size="sm" onClick={clearSearch} className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0 hover:bg-muted">
                         <X className="w-4 h-4" />
                       </Button>
                     )}
@@ -167,9 +154,7 @@ export default function PapersPage() {
                   <h2 className="text-lg font-semibold text-foreground">
                     {searchQuery ? filteredPapers.length : papers.length} {(searchQuery ? filteredPapers.length : papers.length) === 1 ? "Paper" : "Papers"}
                   </h2>
-                  <p className="text-sm text-muted-foreground">
-                    {searchQuery ? "Search results" : "Your research collection"}
-                  </p>
+                  <p className="text-sm text-muted-foreground">{searchQuery ? "Search results" : "Your research collection"}</p>
                 </div>
                 {papers.length > 0 && !searchQuery && (
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -186,9 +171,7 @@ export default function PapersPage() {
                   <FileText className="w-10 h-10 text-muted-foreground/50" />
                 </div>
                 <h3 className="text-2xl font-semibold mb-3 text-foreground">No papers yet</h3>
-                <p className="text-muted-foreground mb-8 max-w-md mx-auto">
-                  Your library is empty. Upload your first research paper to start building your collection.
-                </p>
+                <p className="text-muted-foreground mb-8 max-w-md mx-auto">Your library is empty. Upload your first research paper to start building your collection.</p>
                 <Link href="/">
                   <Button size="lg" className="flex items-center gap-2">
                     <Plus className="w-5 h-5" />
@@ -202,9 +185,7 @@ export default function PapersPage() {
                   <Search className="w-10 h-10 text-muted-foreground/50" />
                 </div>
                 <h3 className="text-2xl font-semibold mb-3 text-foreground">No papers found</h3>
-                <p className="text-muted-foreground mb-8 max-w-md mx-auto">
-                  No papers match your search for &ldquo;{searchQuery}&rdquo;. Try a different search term.
-                </p>
+                <p className="text-muted-foreground mb-8 max-w-md mx-auto">No papers match your search for &ldquo;{searchQuery}&rdquo;. Try a different search term.</p>
                 <Button onClick={clearSearch} variant="outline" className="flex items-center gap-2">
                   <X className="w-4 h-4" />
                   Clear Search
@@ -234,17 +215,14 @@ export default function PapersPage() {
                         {searchQuery ? (
                           <span
                             dangerouslySetInnerHTML={{
-                              __html: paper.title.replace(
-                                new RegExp(`(${searchQuery})`, 'gi'),
-                                '<mark class="bg-primary/20 text-primary font-semibold">$1</mark>'
-                              )
+                              __html: paper.title.replace(new RegExp(`(${searchQuery})`, "gi"), '<mark class="bg-primary/20 text-primary font-semibold">$1</mark>')
                             }}
                           />
                         ) : (
                           paper.title
                         )}
                       </h3>
-                      
+
                       <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
                         <Calendar className="w-4 h-4" />
                         <span>{formatDate(paper.created_at)}</span>
@@ -254,12 +232,8 @@ export default function PapersPage() {
                     </div>
 
                     {/* Action */}
-                    <Link href={`/${paper._id || 'unknown'}`} className="block">
-                      <Button 
-                        size="sm" 
-                        className="w-full flex items-center justify-center gap-2 group-hover:bg-primary group-hover:text-primary-foreground transition-all"
-                        variant="outline"
-                      >
+                    <Link href={`/${paper._id || "unknown"}`} className="block">
+                      <Button size="sm" className="w-full flex items-center justify-center gap-2 group-hover:bg-primary group-hover:text-primary-foreground transition-all" variant="outline">
                         <ExternalLink className="w-4 h-4" />
                         Read Paper
                       </Button>
@@ -276,4 +250,4 @@ export default function PapersPage() {
       </main>
     </div>
   );
-} 
+}
