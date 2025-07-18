@@ -25,9 +25,12 @@ class Block(Document):
     paper: Link[Paper]
     next_block: Optional[Link["Block"]] = None
 
+    class Settings:
+        name = "blocks"
+
 
 class Paragraph(Block):
-    title: Optional[str]
+    title: Optional[str] = None
     text: str
 
 
@@ -37,31 +40,31 @@ class Header(Block):
 
 
 class Figure(Block):
-    caption: Optional[str]
-    image_url: Optional[str]
-    figure_number: Optional[int]
+    caption: Optional[str] = None
+    figure_number: Optional[int] = None
+    image_url: str
 
 
 class Table(Block):
-    caption: Optional[str]
-    title: Optional[str]
+    caption: Optional[str] = None
+    title: Optional[str] = None
     columns: list[str]  # Column headers
     rows: list[list[str]]  # Rows of data
 
 
 class Equation(Block):
-    caption: Optional[str]
+    caption: Optional[str] = None
     equation: str  # LaTeX or MathML representation
 
 
 class CodeBlock(Block):
     code: str
-    language: Optional[str]  # Programming language of the code block
+    language: Optional[str] = None  # Programming language of the code block
 
 
 class Quote(Block):
     text: str
-    author: Optional[str]
+    author: Optional[str] = None
 
 
 class Callout(Block):
@@ -71,12 +74,12 @@ class Callout(Block):
 class Reference(Block):
     title: str
     authors: list[str]  # List of author names
-    publication_year: Optional[int]
-    journal: Optional[str]
-    volume: Optional[str]
-    issue: Optional[str]
-    pages: Optional[str]
-    doi: Optional[str]
+    publication_year: Optional[int] = None
+    journal: Optional[str] = None
+    volume: Optional[str] = None
+    issue: Optional[str] = None
+    pages: Optional[str] = None
+    doi: Optional[str] = None
 
 
 class Footnote(Block):
