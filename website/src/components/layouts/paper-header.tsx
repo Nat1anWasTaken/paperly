@@ -1,9 +1,10 @@
 "use client";
 
 import * as React from "react";
-import { FileText, Menu } from "lucide-react";
+import { FileText, Menu, MousePointer, MousePointer2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { useSelection } from "@/contexts/selection-context";
 
 interface PaperHeaderProps {
   paperTitle: string;
@@ -11,6 +12,8 @@ interface PaperHeaderProps {
 }
 
 export function PaperHeader({ paperTitle, onToggleSidebar }: PaperHeaderProps) {
+  const { isSelectionMode, setSelectionMode } = useSelection();
+
   return (
     <header className="sticky top-2 z-10 mx-4 mt-2 mb-3 flex items-center justify-between bg-background/20 backdrop-blur-2xl supports-[backdrop-filter]:bg-background/10 px-4 py-2.5 border border-border shadow-lg rounded-lg">
       <div className="flex items-center gap-3">
@@ -28,7 +31,18 @@ export function PaperHeader({ paperTitle, onToggleSidebar }: PaperHeaderProps) {
         </span>
       </div>
 
-      <ThemeToggle />
+      <div className="flex items-center gap-2">
+        <Button
+          variant={isSelectionMode ? "default" : "outline"}
+          size="sm"
+          onClick={() => setSelectionMode(!isSelectionMode)}
+          className="text-sm"
+        >
+          <MousePointer2 className="size-4 mr-2" />
+          {isSelectionMode ? "Exit Selection" : "Select Blocks"}
+        </Button>
+        <ThemeToggle />
+      </div>
     </header>
   );
 }

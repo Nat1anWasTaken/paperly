@@ -38,11 +38,90 @@ export interface GetAnalysisResponse {
   paper_id?: string;
 }
 
+export interface SummaryRequest {
+  block_ids: string[];
+  language?: string;
+}
+
 export class PaperlyAPI {
   private baseUrl: string;
 
   constructor(baseUrl: string = API_BASE_URL) {
     this.baseUrl = baseUrl;
+  }
+
+  /**
+   * Create a summary for selected blocks
+   */
+  async createSummary(request: SummaryRequest): Promise<ReadableStream<Uint8Array>> {
+    const url = `${this.baseUrl}/summaries/`;
+    
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'text/event-stream',
+      },
+      body: JSON.stringify({
+        block_ids: request.block_ids,
+        language: request.language || 'en_US',
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Failed to create summary: ${response.status} ${response.statusText} - ${errorText}`);
+    }
+
+    if (!response.body) {
+      throw new Error('No response body received from summary endpoint');
+    }
+
+    return response.body;
+  }
+
+  /**
+   * Parse SSE stream and extract text content
+   */
+  async *parseSummaryStream(stream: ReadableStream<Uint8Array>): AsyncGenerator<{event: string, data: string}> {
+    const reader = stream.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        
+        // Split by double newlines to get complete SSE messages
+        const messages = buffer.split('\n\n');
+        buffer = messages.pop() || ''; // Keep the incomplete message in buffer
+
+        for (const message of messages) {
+          if (message.trim() === '') continue;
+
+          const lines = message.split('\n');
+          let event = '';
+          let data = '';
+
+          for (const line of lines) {
+            if (line.startsWith('event: ')) {
+              event = line.substring(7).trim();
+            } else if (line.startsWith('data: ')) {
+              data = line.substring(6);
+            }
+          }
+
+          if (event && data !== undefined) {
+            yield { event, data };
+          }
+        }
+      }
+    } finally {
+      reader.releaseLock();
+    }
   }
 
   /**
