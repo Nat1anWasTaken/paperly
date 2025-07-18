@@ -5,10 +5,10 @@ from typing import Optional, List
 from beanie import WriteRules, PydanticObjectId
 
 from src.logging import get_logger
-from src.models.block import Header, BlockKind, Figure, Paragraph, Table, Equation, CodeBlock, Quote, Block
+from src.models.block import Header, BlockKind, Figure, Paragraph, Table, Equation, CodeBlock, Quote, Block, Callout, Reference, Footnote, Quiz
 from src.storage.s3 import storage_client, bucket_name
 from src.utils.markdown import HeaderBlock, FigureBlock, ParagraphBlock, TableBlock, EquationBlock, CodeBlock, \
-    QuoteBlock, MarkdownBlock
+    QuoteBlock, MarkdownBlock, CalloutBlock, ReferenceBlock, FootnoteBlock, QuizBlock
 
 logger = get_logger(__name__)
 
@@ -171,7 +171,83 @@ async def create_quote_block(block_info: QuoteBlock, paper) -> Quote:
     return Quote(
         kind=BlockKind.QUOTE,
         paper=paper,
+        text=block_info['text'],
+        author=block_info.get('author')
+    )
+
+
+async def create_callout_block(block_info: CalloutBlock, paper) -> Callout:
+    """
+    Create a callout block from block info.
+
+    :param block_info: Dictionary containing block information.
+    :param paper: Paper reference.
+    :return: Created Callout block.
+    :rtype: Callout
+    """
+    return Callout(
+        kind=BlockKind.CALLOUT,
+        paper=paper,
         text=block_info['text']
+    )
+
+
+async def create_reference_block(block_info: ReferenceBlock, paper) -> Reference:
+    """
+    Create a reference block from block info.
+
+    :param block_info: Dictionary containing block information.
+    :param paper: Paper reference.
+    :return: Created Reference block.
+    :rtype: Reference
+    """
+    return Reference(
+        kind=BlockKind.REFERENCE,
+        paper=paper,
+        title=block_info['title'],
+        authors=block_info['authors'],
+        publication_year=block_info.get('publication_year'),
+        journal=block_info.get('journal'),
+        volume=block_info.get('volume'),
+        issue=block_info.get('issue'),
+        pages=block_info.get('pages'),
+        doi=block_info.get('doi')
+    )
+
+
+async def create_footnote_block(block_info: FootnoteBlock, paper) -> Footnote:
+    """
+    Create a footnote block from block info.
+
+    :param block_info: Dictionary containing block information.
+    :param paper: Paper reference.
+    :return: Created Footnote block.
+    :rtype: Footnote
+    """
+    return Footnote(
+        kind=BlockKind.FOOTNOTE,
+        paper=paper,
+        text=block_info['text'],
+        reference_number=block_info['reference_number']
+    )
+
+
+async def create_quiz_block(block_info: QuizBlock, paper) -> Quiz:
+    """
+    Create a quiz block from block info.
+
+    :param block_info: Dictionary containing block information.
+    :param paper: Paper reference.
+    :return: Created Quiz block.
+    :rtype: Quiz
+    """
+    return Quiz(
+        kind=BlockKind.QUIZ,
+        paper=paper,
+        question=block_info['question'],
+        options=block_info['options'],
+        correct_answer=block_info['correct_answer'],
+        explanation=block_info.get('explanation')
     )
 
 
@@ -192,7 +268,11 @@ async def create_block_from_info(block_info: MarkdownBlock, paper):
         'table': create_table_block,
         'equation': create_equation_block,
         'code_block': create_code_block,
-        'quote': create_quote_block
+        'quote': create_quote_block,
+        'callout': create_callout_block,
+        'reference': create_reference_block,
+        'footnote': create_footnote_block,
+        'quiz': create_quiz_block
     }
 
     creator = block_creators.get(block_type)
@@ -253,6 +333,10 @@ async def get_blocks_in_order(paper_id: PydanticObjectId) -> List[Block]:
         BlockKind.EQUATION: Equation,
         BlockKind.CODE_BLOCK: CodeBlock,
         BlockKind.QUOTE: Quote,
+        BlockKind.CALLOUT: Callout,
+        BlockKind.REFERENCE: Reference,
+        BlockKind.FOOTNOTE: Footnote,
+        BlockKind.QUIZ: Quiz,
     }
     
     for doc in block_docs:
