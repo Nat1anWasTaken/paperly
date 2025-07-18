@@ -8,15 +8,7 @@ Your task is to generate a concise and informative summary of the provided block
 4. Include important details from figures, tables, and equations when present
 5. Be approximately 2-3 paragraphs in length
 6. Use clear, academic language appropriate for the subject matter
-7. Be written in the language corresponding to the ISO language code: {language}
-   - For zh_TW or zh_CN: Write in Traditional or Simplified Chinese respectively
-   - For en_US or en_GB: Write in English
-   - For ja_JP: Write in Japanese
-   - For ko_KR: Write in Korean
-   - For fr_FR: Write in French
-   - For de_DE: Write in German
-   - For es_ES: Write in Spanish
-   - And so on for other language codes
+7. YOU MUST RESPOND IN {language}
 
 Please analyze all the provided blocks and create a comprehensive summary that would help a reader understand the essential content without having to read the original blocks in full.
 
