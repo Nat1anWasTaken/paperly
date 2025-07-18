@@ -62,9 +62,9 @@ class Settings(BaseModel):
                 secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY")
             ),
             openai=OpenAIConfig(
-                api_base_url=os.getenv("OPENAI_API_BASE_URL", "https://api.openai.com/v1"),
-                api_key=os.getenv("OPENAI_API_KEY"),
-                model=os.getenv("OPENAI_MODEL", "gpt-4o")
+                api_base_url=os.getenv("AZURE_OPENAI_API_ENDPOINT", "https://api.openai.com/v1"),
+                api_key=os.getenv("AZURE_OPENAI_API_KEY"),
+                model=os.getenv("AZURE_OPENAI_MODEL", "gpt-4o")
             ),
             document_intelligence=DocumentIntelligenceConfig(
                 endpoint=os.getenv("AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT"),
