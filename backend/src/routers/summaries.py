@@ -1,11 +1,12 @@
 from typing import List, Optional
 
 from beanie import PydanticObjectId
-from pydantic import BaseModel
-
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
+from pydantic import BaseModel
+
 from src.models.block import Block
+from src.models.translation import LanguageCode
 from src.openai import client, model
 from src.utils.object_id import validate_object_id_or_raise_http_exception
 
@@ -14,7 +15,7 @@ router = APIRouter(prefix="/summaries")
 
 class SummaryRequest(BaseModel):
     block_ids: List[str]
-    language: Optional[str] = "en_US"  # Default to English (US)
+    language: Optional[LanguageCode] = "en"
 
 
 async def generate_summary_stream(blocks_content: str, language: str = "en_US"):

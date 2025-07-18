@@ -9,6 +9,7 @@ from src.models.analysis import Analysis
 from src.models.block import Block, Paragraph, Header, Figure, Table, Equation, CodeBlock, Quote, Callout, Reference, \
     Footnote, Quiz
 from src.models.paper import Paper
+from src.models.translation import Translation
 
 logger = get_logger(__name__)
 
@@ -71,7 +72,8 @@ class Database:
             Callout,
             Reference,
             Footnote,
-            Quiz
+            Quiz,
+            Translation
         ]
 
         await init_beanie(database=self.database, document_models=document_models)

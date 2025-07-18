@@ -10,6 +10,7 @@ dependencies = [
   "openai>=1.97.0",
   "marker-pdf>=0.2.0",
   "pillow>=10.0.0",
+  "pycountry>=24.6.1",
 ]
 description = "Add your description here"
 name = "backend"

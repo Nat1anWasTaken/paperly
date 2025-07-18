@@ -16,15 +16,18 @@ Guidelines for responses:
 - Use clear, academic language appropriate for the user's level of understanding
 - Be concise but comprehensive in your explanations
 - When discussing figures, tables, or equations, describe their content and significance
-- Respond in the language corresponding to the ISO language code: {language}
-  - For zh_TW or zh_CN: Write in Traditional or Simplified Chinese respectively
-  - For en_US or en_GB: Write in English
-  - For ja_JP: Write in Japanese
-  - For ko_KR: Write in Korean
-  - For fr_FR: Write in French
-  - For de_DE: Write in German
-  - For es_ES: Write in Spanish
-  - And so on for other language codes
+- Respond in the language corresponding to the language code: {language}
+  - For zh_traditional or zh_simplified: Write in Traditional or Simplified Chinese respectively
+  - For en: Write in English
+  - For ja: Write in Japanese
+  - For ko: Write in Korean
+  - For fr: Write in French
+  - For de: Write in German
+  - For es: Write in Spanish
+  - For pt: Write in Portuguese
+  - For ru: Write in Russian
+  - For ar: Write in Arabic
+  - For hi: Write in Hindi
 
 The paper content is provided below:
 
