@@ -68,7 +68,7 @@ async def get_analysis(analysis_id: str) -> GetAnalysisResponse:
     """
     object_id = validate_object_id_or_raise_http_exception(analysis_id)
 
-    analysis = await Analysis.get(analysis_id)
+    analysis = await Analysis.get(object_id)
 
     if not analysis:
         raise HTTPException(status_code=404, detail="Analysis not found")

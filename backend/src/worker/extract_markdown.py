@@ -3,6 +3,7 @@ import re
 import uuid
 from io import BytesIO
 
+from beanie import WriteRules
 from marker.converters.pdf import PdfConverter
 from marker.models import create_model_dict
 from marker.output import text_from_rendered
@@ -103,6 +104,9 @@ class MarkdownExtractionWorker(BaseWorker):
         :param analysis: The analysis to process.
         """
         logger.info(f"Starting markdown extraction for analysis {analysis.id}")
+
+        analysis.status = AnalysisStatus.EXTRACTING_MARKDOWN
+        await analysis.save(link_rule=WriteRules.WRITE)
         
         file_object = download_file_from_bucket(analysis.file_key)
         logger.debug(f"File downloaded for analysis {analysis.id}, converting to markdown")
@@ -116,9 +120,10 @@ class MarkdownExtractionWorker(BaseWorker):
         logger.info(f"Markdown extraction completed for analysis {analysis.id} ({markdown_length} characters)")
 
         updated_markdown = process_images_and_update_markdown(markdown_content, images)
-        await analysis.set({
-            "processed_markdown": updated_markdown,
-            "status": AnalysisStatus.MARKDOWN_EXTRACTED
-        })
+
+        analysis.status = AnalysisStatus.MARKDOWN_EXTRACTED
+        analysis.processed_markdown = updated_markdown
+        await analysis.save(link_rule=WriteRules.WRITE)
+
         logger.info(
             f"Analysis {analysis.id} updated with extracted markdown and status changed to MARKDOWN_EXTRACTED")

@@ -73,6 +73,9 @@ class MetadataGeneratorWorker(BaseWorker):
         logger.info(f"Starting metadata generation for analysis {analysis.id}")
         logger.debug(f"Processing markdown for analysis {analysis.id}")
 
+        analysis.status = AnalysisStatus.GENERATING_METADATA
+        await analysis.save(link_rule=WriteRules.WRITE)
+
         # Extract title from the first, biggest heading
         title = extract_first_biggest_heading(analysis.processed_markdown)
         logger.info(f"Extracted title: '{title}' for analysis {analysis.id}")

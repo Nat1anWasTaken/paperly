@@ -1,4 +1,3 @@
-import asyncio
 from typing import List
 
 from beanie import WriteRules
@@ -57,14 +56,16 @@ class IntoBlocksWorker(BaseWorker):
         :param analysis: The analysis to process.
         """
         logger.info(f"Starting block generation for analysis {analysis.id}")
-        logger.debug(f"Processing markdown into blocks for analysis {analysis.id}")
+
+        analysis.status = AnalysisStatus.PROCESSING_INTO_BLOCKS
+        await analysis.save(link_rule=WriteRules.WRITE)
 
         block_data = parse_markdown_to_blocks(analysis.processed_markdown)
         logger.info(f"Parsed {len(block_data)} blocks for analysis {analysis.id}")
 
         await self._process_blocks(block_data, analysis.paper)
 
-        analysis.status = AnalysisStatus.COMPLETED
+        analysis.status = AnalysisStatus.BLOCKS_PROCESSED
         await analysis.save(link_rule=WriteRules.WRITE)
 
-        logger.info(f"Analysis {analysis.id} processed into blocks and status updated to COMPLETED")
+        logger.info(f"Analysis {analysis.id} processed into blocks and status updated to BLOCKS_PROCESSED")

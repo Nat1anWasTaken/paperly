@@ -8,6 +8,7 @@ from src.fastapi import app
 from src.logging import get_logger, setup_logging
 from src.storage.s3 import S3Storage
 from src.worker.extract_markdown import MarkdownExtractionWorker
+from src.worker.generate_quizzes import GenerateQuizzesWorker
 from src.worker.into_blocks import IntoBlocksWorker
 from src.worker.metadata_generator import MetadataGeneratorWorker
 
@@ -30,6 +31,7 @@ async def start_workers():
     MarkdownExtractionWorker().start()
     MetadataGeneratorWorker().start()
     IntoBlocksWorker().start()
+    GenerateQuizzesWorker().start()
 
 
 async def main():
