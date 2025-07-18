@@ -25,11 +25,8 @@ export function QuizBlockComponent({ block }: QuizBlockProps) {
   const isCorrect = selectedIndex === correctAnswerIndex;
 
   return (
-    <div className="my-4 p-4 border rounded-lg bg-accent/50">
-      <h4 className="font-semibold text-lg mb-3 text-accent-foreground">
-        Quiz Question
-      </h4>
-      <p className="text-foreground mb-4 leading-7">{block.question}</p>
+    <div className="space-y-4">
+      <p className="text-foreground mb-4 leading-7 font-medium">{block.question}</p>
 
       <RadioGroup
         value={selectedAnswer}

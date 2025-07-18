@@ -3,11 +3,13 @@
 import * as React from "react";
 import { MainLayout } from "@/components/layouts/main-layout";
 import { BlockRenderer } from "@/components/blocks";
+import { QuizAccordion, groupQuizBlocks } from "@/components/blocks/quiz-accordion";
 import { notFound } from "next/navigation";
 import { usePaperData } from "@/hooks/use-papers";
 import {
   PaperData,
   FrontendPaper,
+  QuizBlock,
 } from "@/data/types";
 
 interface PaperSectionPageProps {
@@ -103,9 +105,21 @@ export default function PaperSectionPage({ params }: PaperSectionPageProps) {
       <article className="space-y-8">
         <div key={currentSection.id} id={currentSection.id} className="section">
           <div className="space-y-6">
-            {currentSection.blocks.map((block) => (
-              <BlockRenderer key={block.id} block={block} />
-            ))}
+            {groupQuizBlocks(currentSection.blocks).map((blockOrGroup, index) => {
+              // If it's an array of quiz blocks, render as accordion
+              if (Array.isArray(blockOrGroup)) {
+                return (
+                  <QuizAccordion 
+                    key={`quiz-group-${index}`} 
+                    quizBlocks={blockOrGroup as QuizBlock[]} 
+                  />
+                );
+              }
+              // Otherwise render as normal block
+              return (
+                <BlockRenderer key={blockOrGroup.id} block={blockOrGroup} />
+              );
+            })}
           </div>
         </div>
       </article>
