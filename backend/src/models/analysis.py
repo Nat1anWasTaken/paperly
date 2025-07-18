@@ -13,6 +13,8 @@ class AnalysisStatus(Enum):
     GENERATING_METADATA = "generating_metadata"
     METADATA_GENERATED = "metadata_generated"
     PROCESSING_INTO_BLOCKS = "processing_into_blocks"
+    BLOCKS_PROCESSED = "blocks_processed"
+    GENERATING_QUIZZES = "generating_quizzes"
     COMPLETED = "completed"
     ERRORED = "errored"
 

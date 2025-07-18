@@ -16,6 +16,8 @@ class CodeBlock(TypedDict):
 
 class TableBlock(TypedDict):
     type: str
+    caption: Optional[str]
+    title: Optional[str]
     columns: List[str]
     rows: List[List[str]]
 
@@ -23,25 +25,60 @@ class TableBlock(TypedDict):
 class FigureBlock(TypedDict):
     type: str
     caption: Optional[str]
+    figure_number: Optional[int]
     image_url: str
 
 
 class QuoteBlock(TypedDict):
     type: str
     text: str
+    author: Optional[str]
 
 
 class EquationBlock(TypedDict):
     type: str
+    caption: Optional[str]
     equation: str
 
 
 class ParagraphBlock(TypedDict):
     type: str
+    title: Optional[str]
     text: str
 
 
-MarkdownBlock = Union[HeaderBlock, CodeBlock, TableBlock, FigureBlock, QuoteBlock, EquationBlock, ParagraphBlock]
+class CalloutBlock(TypedDict):
+    type: str
+    text: str
+
+
+class ReferenceBlock(TypedDict):
+    type: str
+    title: str
+    authors: List[str]
+    publication_year: Optional[int]
+    journal: Optional[str]
+    volume: Optional[str]
+    issue: Optional[str]
+    pages: Optional[str]
+    doi: Optional[str]
+
+
+class FootnoteBlock(TypedDict):
+    type: str
+    text: str
+    reference_number: int
+
+
+class QuizBlock(TypedDict):
+    type: str
+    question: str
+    options: List[str]
+    correct_answer: str
+    explanation: Optional[str]
+
+
+MarkdownBlock = Union[HeaderBlock, CodeBlock, TableBlock, FigureBlock, QuoteBlock, EquationBlock, ParagraphBlock, CalloutBlock, ReferenceBlock, FootnoteBlock, QuizBlock]
 
 
 def parse_markdown_to_blocks(markdown_content: str) -> List[MarkdownBlock]:
