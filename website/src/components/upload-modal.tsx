@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import { Upload, FileText, Clock, Trash2, Eye } from "lucide-react";
+import { useState, useCallback, useRef, useEffect } from "react";
+import { Upload, FileText, Clock, Trash2, Eye, CheckCircle, AlertCircle, Loader2, Copy } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -14,14 +14,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
-
-interface UploadedPaper {
-  id: string;
-  name: string;
-  size: string;
-  uploadDate: string;
-  status: 'processing' | 'ready' | 'error';
-}
+import { uploadAndAnalyzePaper, UploadProgress, AnalysisStatus, api } from "@/lib/api";
+import { AnalysisStorage, StoredAnalysis } from "@/lib/storage";
 
 interface UploadModalProps {
   trigger?: React.ReactNode;
@@ -30,31 +24,78 @@ interface UploadModalProps {
 export function UploadModal({ trigger }: UploadModalProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [dragActive, setDragActive] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [uploadHistory, setUploadHistory] = useState<UploadedPaper[]>([
-    {
-      id: "1",
-      name: "Deep Learning Fundamentals.pdf",
-      size: "2.4 MB",
-      uploadDate: "2 hours ago",
-      status: "ready"
-    },
-    {
-      id: "2", 
-      name: "Neural Networks and Backpropagation.pdf",
-      size: "1.8 MB",
-      uploadDate: "1 day ago", 
-      status: "ready"
-    },
-    {
-      id: "3",
-      name: "Transformer Architecture.pdf",
-      size: "3.1 MB",
-      uploadDate: "3 days ago",
-      status: "processing"
+  const [uploadHistory, setUploadHistory] = useState<StoredAnalysis[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const monitoringRef = useRef<Set<string>>(new Set());
+
+  // Load stored analyses on component mount
+  useEffect(() => {
+    const storedAnalyses = AnalysisStorage.getAll();
+    setUploadHistory(storedAnalyses);
+    
+    // Resume monitoring for any in-progress analyses
+    const processingAnalyses = AnalysisStorage.getProcessing();
+    processingAnalyses.forEach(analysis => {
+      if (analysis.analysisId && !monitoringRef.current.has(analysis.analysisId)) {
+        monitorAnalysis(analysis.id, analysis.analysisId);
+      }
+    });
+  }, []);
+
+  // Monitor analysis progress
+  const monitorAnalysis = useCallback(async (id: string, analysisId: string) => {
+    if (monitoringRef.current.has(analysisId)) return;
+    
+    monitoringRef.current.add(analysisId);
+    
+    try {
+      while (true) {
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        const analysis = await api.getAnalysis(analysisId);
+        
+        const progressMap: Record<AnalysisStatus, number> = {
+          created: 10,
+          extracting_markdown: 25,
+          markdown_extracted: 40,
+          generating_metadata: 55,
+          metadata_generated: 70,
+          processing_into_blocks: 85,
+          completed: 100,
+          errored: 0,
+        };
+
+        const progress = progressMap[analysis.status] || 0;
+        
+        const updates: Partial<StoredAnalysis> = {
+          status: analysis.status === 'completed' ? 'ready' : analysis.status === 'errored' ? 'error' : 'analyzing',
+          analysisStatus: analysis.status,
+          progress,
+          paperId: analysis.paper_id,
+        };
+
+        if (analysis.status === 'errored') {
+          updates.errorMessage = 'Analysis failed';
+        }
+
+        AnalysisStorage.update(id, updates);
+        setUploadHistory(AnalysisStorage.getAll());
+
+        if (analysis.status === 'completed' || analysis.status === 'errored') {
+          monitoringRef.current.delete(analysisId);
+          break;
+        }
+      }
+    } catch (error) {
+      console.error('Error monitoring analysis:', error);
+      AnalysisStorage.update(id, {
+        status: 'error',
+        errorMessage: 'Failed to monitor analysis progress',
+      });
+      setUploadHistory(AnalysisStorage.getAll());
+      monitoringRef.current.delete(analysisId);
     }
-  ]);
+  }, []);
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -78,6 +119,11 @@ export function UploadModal({ trigger }: UploadModalProps) {
   const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     handleFiles(files);
+    
+    // Clear the input so the same file can be selected again
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   const handleFiles = async (files: File[]) => {
@@ -88,76 +134,125 @@ export function UploadModal({ trigger }: UploadModalProps) {
       return;
     }
 
+    // Process files one by one to avoid overwhelming the server
     for (const file of pdfFiles) {
       await uploadFile(file);
     }
   };
 
   const uploadFile = async (file: File) => {
-    setUploading(true);
-    setUploadProgress(0);
+    const newAnalysisId = Date.now().toString();
+    
+    // Create initial stored analysis
+    const initialAnalysis: StoredAnalysis = {
+      id: newAnalysisId,
+      analysisId: '', // Will be set after API call
+      fileName: file.name,
+      fileSize: `${(file.size / (1024 * 1024)).toFixed(1)} MB`,
+      uploadDate: new Date().toLocaleString(),
+      status: 'uploading',
+      progress: 0,
+      lastUpdated: new Date().toISOString(),
+    };
 
-    // Simulate upload progress
-    const interval = setInterval(() => {
-      setUploadProgress(prev => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          setUploading(false);
-          
-          // Add to history
-          const newPaper: UploadedPaper = {
-            id: Date.now().toString(),
-            name: file.name,
-            size: `${(file.size / (1024 * 1024)).toFixed(1)} MB`,
-            uploadDate: "Just now",
-            status: "processing"
-          };
-          
-          setUploadHistory(prev => [newPaper, ...prev]);
-          
-          // Simulate processing completion
-          setTimeout(() => {
-            setUploadHistory(prev => 
-              prev.map(paper => 
-                paper.id === newPaper.id 
-                  ? { ...paper, status: "ready" as const }
-                  : paper
-              )
-            );
-          }, 3000);
-          
-          return 100;
-        }
-        return prev + 10;
+    AnalysisStorage.save(initialAnalysis);
+    setUploadHistory(AnalysisStorage.getAll());
+
+    try {
+      const result = await uploadAndAnalyzePaper(file, (progress: UploadProgress) => {
+        const updates: Partial<StoredAnalysis> = {
+          status: progress.stage === 'uploading' ? 'uploading' : 'analyzing',
+          progress: progress.progress,
+          analysisStatus: progress.status,
+        };
+        
+        AnalysisStorage.update(newAnalysisId, updates);
+        setUploadHistory(AnalysisStorage.getAll());
       });
-    }, 200);
+
+      // Update with analysis ID and start monitoring
+      AnalysisStorage.update(newAnalysisId, {
+        analysisId: result.analysisId,
+        status: 'analyzing',
+      });
+      setUploadHistory(AnalysisStorage.getAll());
+
+      // Start monitoring the analysis
+      monitorAnalysis(newAnalysisId, result.analysisId);
+
+    } catch (error) {
+      console.error('Upload failed:', error);
+      
+      AnalysisStorage.update(newAnalysisId, {
+        status: 'error',
+        errorMessage: error instanceof Error ? error.message : 'Upload failed',
+      });
+      setUploadHistory(AnalysisStorage.getAll());
+    }
   };
 
   const deletePaper = (id: string) => {
-    setUploadHistory(prev => prev.filter(paper => paper.id !== id));
+    AnalysisStorage.delete(id);
+    setUploadHistory(AnalysisStorage.getAll());
   };
 
-  const getStatusIcon = (status: UploadedPaper['status']) => {
-    switch (status) {
-      case 'processing':
-        return <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse" />;
-      case 'ready':
-        return <div className="w-2 h-2 bg-green-500 rounded-full" />;
-      case 'error':
-        return <div className="w-2 h-2 bg-red-500 rounded-full" />;
+  const viewPaper = (analysis: StoredAnalysis) => {
+    if (analysis.paperId && analysis.status === 'ready') {
+      window.open(`/${analysis.paperId}`, '_blank');
     }
   };
 
-  const getStatusText = (status: UploadedPaper['status']) => {
-    switch (status) {
-      case 'processing':
-        return 'Processing...';
+  const copyAnalysisId = (analysisId: string) => {
+    navigator.clipboard.writeText(analysisId);
+    // You could add a toast notification here
+  };
+
+  const getStatusIcon = (analysis: StoredAnalysis) => {
+    switch (analysis.status) {
+      case 'uploading':
+        return <Loader2 className="w-4 h-4 text-blue-500 animate-spin" />;
+      case 'analyzing':
+        return <Loader2 className="w-4 h-4 text-yellow-500 animate-spin" />;
       case 'ready':
-        return 'Ready';
+        return <CheckCircle className="w-4 h-4 text-green-500" />;
       case 'error':
-        return 'Error';
+        return <AlertCircle className="w-4 h-4 text-red-500" />;
     }
   };
+
+  const getStatusText = (analysis: StoredAnalysis) => {
+    switch (analysis.status) {
+      case 'uploading':
+        return `Uploading... ${analysis.progress || 0}%`;
+      case 'analyzing':
+        return analysis.analysisStatus ? 
+          getAnalysisStatusText(analysis.analysisStatus) + ` ${analysis.progress || 0}%` :
+          `Analyzing... ${analysis.progress || 0}%`;
+      case 'ready':
+        return 'Ready to view';
+      case 'error':
+        return analysis.errorMessage || 'Upload failed';
+    }
+  };
+
+  const getAnalysisStatusText = (status: AnalysisStatus): string => {
+    const statusTexts: Record<AnalysisStatus, string> = {
+      created: 'Starting analysis...',
+      extracting_markdown: 'Extracting text...',
+      markdown_extracted: 'Text extracted...',
+      generating_metadata: 'Generating metadata...',
+      metadata_generated: 'Metadata generated...',
+      processing_into_blocks: 'Processing blocks...',
+      completed: 'Complete!',
+      errored: 'Analysis failed',
+    };
+    
+    return statusTexts[status] || 'Processing...';
+  };
+
+  const isUploading = uploadHistory.some(analysis => 
+    analysis.status === 'uploading' || analysis.status === 'analyzing'
+  );
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -173,7 +268,7 @@ export function UploadModal({ trigger }: UploadModalProps) {
         <DialogHeader>
           <DialogTitle className="text-foreground">Upload Academic Paper</DialogTitle>
           <DialogDescription>
-            Upload PDF files to make them easier to read with Paperly
+            Upload PDF files to analyze and make them easier to read with Paperly
           </DialogDescription>
         </DialogHeader>
 
@@ -186,7 +281,7 @@ export function UploadModal({ trigger }: UploadModalProps) {
                 dragActive 
                   ? 'border-primary bg-primary/5' 
                   : 'border-border hover:border-primary/50'
-              }`}
+              } ${isUploading ? 'opacity-50 pointer-events-none' : ''}`}
               onDragEnter={handleDrag}
               onDragLeave={handleDrag}
               onDragOver={handleDrag}
@@ -194,41 +289,31 @@ export function UploadModal({ trigger }: UploadModalProps) {
             >
               <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
               <p className="text-foreground font-medium mb-1">
-                Drop PDF files here or click to browse
+                {isUploading ? 'Processing uploads...' : 'Drop PDF files here or click to browse'}
               </p>
               <p className="text-sm text-muted-foreground mb-4">
-                Supports PDF files up to 10MB
+                Supports PDF files up to 50MB
               </p>
               <Input
+                ref={fileInputRef}
                 type="file"
                 accept=".pdf"
                 multiple
                 onChange={handleFileInput}
                 className="hidden"
                 id="file-upload"
+                disabled={isUploading}
               />
               <Label htmlFor="file-upload" className="cursor-pointer">
-                <Button variant="outline" className="pointer-events-none">
-                  Choose Files
+                <Button 
+                  variant="outline" 
+                  className="pointer-events-none"
+                  disabled={isUploading}
+                >
+                  {isUploading ? 'Processing...' : 'Choose Files'}
                 </Button>
               </Label>
             </div>
-
-            {/* Upload Progress */}
-            {uploading && (
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-foreground">Uploading...</span>
-                  <span className="text-muted-foreground">{uploadProgress}%</span>
-                </div>
-                <div className="w-full bg-muted rounded-full h-2">
-                  <div 
-                    className="bg-primary h-2 rounded-full transition-all duration-300"
-                    style={{ width: `${uploadProgress}%` }}
-                  />
-                </div>
-              </div>
-            )}
           </div>
 
           {/* Upload History */}
@@ -245,26 +330,63 @@ export function UploadModal({ trigger }: UploadModalProps) {
                     No papers uploaded yet
                   </p>
                 ) : (
-                  uploadHistory.map((paper) => (
+                  uploadHistory.map((analysis) => (
                     <div
-                      key={paper.id}
+                      key={analysis.id}
                       className="flex items-center gap-3 p-3 bg-card rounded-lg border hover:bg-accent/50 transition-colors"
                     >
                       <FileText className="w-4 h-4 text-primary" />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-foreground truncate">
-                          {paper.name}
+                          {analysis.fileName}
                         </p>
                         <div className="flex items-center gap-2 mt-1">
-                          {getStatusIcon(paper.status)}
+                          {getStatusIcon(analysis)}
                           <span className="text-xs text-muted-foreground">
-                            {getStatusText(paper.status)} • {paper.size} • {paper.uploadDate}
+                            {getStatusText(analysis)} • {analysis.fileSize} • {analysis.uploadDate}
                           </span>
                         </div>
+                        
+                        {/* Analysis ID display */}
+                        {analysis.analysisId && (
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="text-xs text-muted-foreground font-mono">
+                              ID: {analysis.analysisId.slice(0, 8)}...
+                            </span>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-4 w-4 p-0"
+                              onClick={() => copyAnalysisId(analysis.analysisId)}
+                              title="Copy full analysis ID"
+                            >
+                              <Copy className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        )}
+                        
+                        {/* Progress bar for active uploads */}
+                        {(analysis.status === 'uploading' || analysis.status === 'analyzing') && (
+                          <div className="w-full bg-muted rounded-full h-1.5 mt-2">
+                            <div 
+                              className={`h-1.5 rounded-full transition-all duration-300 ${
+                                analysis.status === 'uploading' ? 'bg-blue-500' : 'bg-yellow-500'
+                              }`}
+                              style={{ width: `${analysis.progress || 0}%` }}
+                            />
+                          </div>
+                        )}
                       </div>
+                      
                       <div className="flex items-center gap-1">
-                        {paper.status === 'ready' && (
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                        {analysis.status === 'ready' && (
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8"
+                            onClick={() => viewPaper(analysis)}
+                            title="View paper"
+                          >
                             <Eye className="w-3 h-3" />
                           </Button>
                         )}
@@ -272,7 +394,9 @@ export function UploadModal({ trigger }: UploadModalProps) {
                           variant="ghost" 
                           size="icon" 
                           className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                          onClick={() => deletePaper(paper.id)}
+                          onClick={() => deletePaper(analysis.id)}
+                          disabled={analysis.status === 'uploading' || analysis.status === 'analyzing'}
+                          title="Delete"
                         >
                           <Trash2 className="w-3 h-3" />
                         </Button>
@@ -287,4 +411,4 @@ export function UploadModal({ trigger }: UploadModalProps) {
       </DialogContent>
     </Dialog>
   );
-} 
+}
