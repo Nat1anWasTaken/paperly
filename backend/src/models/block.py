@@ -1,9 +1,10 @@
-from datetime import datetime, UTC
 from enum import Enum
 from typing import Optional
 
 from beanie import Document, Link
-from pydantic import Field
+from pydantic import BaseModel
+
+from src.models.paper import Paper
 
 
 class BlockKind(Enum):
@@ -20,16 +21,14 @@ class BlockKind(Enum):
     QUIZ = "quiz"
 
 
-class Paper(Document):
-    title: str
-    doi: str
-    created_at: datetime = Field(default_factory=datetime.now(UTC))
-
-
 class Block(Document):
     kind: BlockKind
     paper: Link[Paper]
     index: int  # Position of the block in the paper, starting from 0
+
+    class Settings:
+        collection = "blocks"
+        use_state_management = True
 
 
 class Paragraph(Block):
@@ -90,9 +89,12 @@ class Footnote(Block):
     reference_number: int  # Footnote number in the document
     paper: Optional[Paper] = None  # Reference to the paper this footnote belongs to
 
+class Question(BaseModel):
+    question: str
+    options: list[str]
+    correct_answer: int  # The index of the correct option in the options list
+
 
 class Quiz(Block):
-    question: str
-    options: list[str]  # List of answer options
-    correct_answer: str  # The correct answer from the options
-    explanation: Optional[str] = None  # Explanation for the correct answer
+    title: str
+    questions: list[Question]

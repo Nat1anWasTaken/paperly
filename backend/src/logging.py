@@ -1,9 +1,10 @@
 import logging
 import sys
 from pathlib import Path
+from typing import Optional
 
 
-def setup_logging(log_level: str = "INFO", log_file: str | None = None) -> None:
+def setup_logging(log_level: str = "INFO", log_file: Optional[str] = None) -> None:
     if log_file:
         log_path = Path(log_file)
         log_path.parent.mkdir(parents=True, exist_ok=True)

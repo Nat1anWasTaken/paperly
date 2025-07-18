@@ -1,12 +1,10 @@
-import os
+from typing import Optional
 
 from beanie import init_beanie
-from dotenv import load_dotenv
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 
-from .logging import get_logger
-
-load_dotenv()
+from src.config import settings
+from src.logging import get_logger
 
 logger = get_logger(__name__)
 
@@ -22,14 +20,14 @@ class Database:
 
     def __init__(self):
         if not self._initialized:
-            self.client: AsyncIOMotorClient | None = None
-            self.database: AsyncIOMotorDatabase | None = None
+            self.client: Optional[AsyncIOMotorClient] = None
+            self.database: Optional[AsyncIOMotorDatabase] = None
             self._initialized = True
 
     async def connect(self):
         try:
-            mongodb_url = os.getenv("MONGODB_URL", "mongodb://localhost:27017")
-            database_name = os.getenv("DATABASE_NAME", "paperly")
+            mongodb_url = settings.database.url
+            database_name = settings.database.name
 
             logger.info(f"Connecting to MongoDB at {mongodb_url}")
             self.client = AsyncIOMotorClient(mongodb_url)
