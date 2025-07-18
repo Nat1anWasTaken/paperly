@@ -1,4 +1,3 @@
-import asyncio
 import re
 
 from beanie import WriteRules
@@ -27,14 +26,14 @@ def extract_first_biggest_heading(markdown_content: str) -> str:
 
     heading_pattern = r'^(#{1,6})\s+(.+)$'
     headings = []
-    
+
     for line in markdown_content.split('\n'):
         match = re.match(heading_pattern, line.strip())
         if match:
             level = len(match.group(1))  # Number of # symbols
             text = match.group(2).strip()
             headings.append((level, text))
-    
+
     if not headings:
         return "Untitled Paper"
 
@@ -43,7 +42,7 @@ def extract_first_biggest_heading(markdown_content: str) -> str:
     for level, text in headings:
         if level == min_level:
             return text
-    
+
     return "Untitled Paper"
 
 
@@ -84,7 +83,7 @@ class MetadataGeneratorWorker(BaseWorker):
         paper = Paper(
             title=title
         )
-        
+
         # Save the paper to the database
         await paper.insert()
         logger.info(f"Created paper {paper.id} with title '{title}'")

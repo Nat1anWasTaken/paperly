@@ -1,7 +1,7 @@
 import asyncio
-from pathlib import Path
-from typing import List, Dict, Any, Optional, Literal
 from dataclasses import dataclass
+from pathlib import Path
+from typing import List, Dict, Any, Optional
 
 from beanie import WriteRules
 from pydantic import BaseModel, Field
@@ -32,7 +32,8 @@ class QuizQuestion(BaseModel):
     Represents a single quiz question with its options and correct answer.
     """
     question: str = Field(..., description="The question text")
-    options: List[str] = Field(..., min_length=4, max_length=4, description="Four answer options in format 'A) Option A', 'B) Option B', etc.")
+    options: List[str] = Field(..., min_length=4, max_length=4,
+                               description="Four answer options in format 'A) Option A', 'B) Option B', etc.")
     correct_answer: int = Field(..., ge=0, le=3, description="The index of the correct answer (0-3)")
     explanation: str = Field(..., description="Explanation of why the correct answer is right")
 
@@ -48,7 +49,7 @@ class SectionExtractor:
     """
     Handles extraction of sections from paper blocks.
     """
-    
+
     def extract_sections(self, blocks: List[Block]) -> List[Section]:
         """
         Extract sections from a list of blocks, using Header blocks as section boundaries.
@@ -70,7 +71,7 @@ class SectionExtractor:
                     section = self._create_section(current_header, current_blocks)
                     if section:
                         sections.append(section)
-                
+
                 current_header = block
                 current_blocks = []
             else:
@@ -95,7 +96,7 @@ class SectionExtractor:
         """
         title = header_block.text if hasattr(header_block, 'text') else "Untitled Section"
         content = self._extract_text_content(content_blocks)
-        
+
         if not content.strip():
             logger.debug(f"Skipping empty section: {title}")
             return None
@@ -116,7 +117,7 @@ class SectionExtractor:
         :rtype: str
         """
         content_parts = []
-        
+
         for block in blocks:
             if hasattr(block, 'text') and block.text:
                 content_parts.append(block.text)
@@ -147,7 +148,7 @@ class QuizGenerator:
     """
     Handles quiz generation using Azure OpenAI.
     """
-    
+
     def __init__(self):
         self.system_prompt = (
             "You are an expert quiz generator for academic papers. "
@@ -155,7 +156,7 @@ class QuizGenerator:
         )
         self.prompt_template = self._load_prompt_template()
         self.response_format = self._get_response_format()
-    
+
     def _load_prompt_template(self) -> str:
         """
         Load the prompt template from file.
@@ -173,7 +174,7 @@ class QuizGenerator:
         except Exception as e:
             logger.error(f"Error loading prompt template: {e}")
             return self._get_fallback_prompt()
-    
+
     def _get_fallback_prompt(self) -> str:
         """
         Fallback prompt if file loading fails.
@@ -187,7 +188,7 @@ Section content:
 {content}
 
 Focus on testing comprehension of main concepts, methodology, and key findings rather than memorization of details.'''
-    
+
     def _get_response_format(self) -> type[QuizResponse]:
         """
         Get the Pydantic model for structured output.
@@ -235,7 +236,6 @@ Focus on testing comprehension of main concepts, methodology, and key findings r
             num_questions=num_questions
         )
 
-
     async def _call_openai(self, prompt: str) -> QuizResponse:
         """
         Call Azure OpenAI API to generate quiz content with structured output.
@@ -257,18 +257,17 @@ Focus on testing comprehension of main concepts, methodology, and key findings r
         )
 
         logger.info(response)
-        
+
         return response.choices[0].message.parsed
-
-
 
 
 class QuizBlockInserter:
     """
     Handles insertion of quiz blocks into the paper structure.
     """
-    
-    async def insert_quizzes(self, quizzes: List[QuizQuestion], insertion_point: Block, paper, section_title: str) -> int:
+
+    async def insert_quizzes(self, quizzes: List[QuizQuestion], insertion_point: Block, paper,
+                             section_title: str) -> int:
         """
         Insert quiz blocks after the specified insertion point.
         
@@ -286,13 +285,13 @@ class QuizBlockInserter:
             try:
                 quiz_block_info = self._quiz_to_block_info(quiz)
                 quiz_block = await create_block_from_info(quiz_block_info, paper)
-                
+
                 if quiz_block:
                     await insert_block_after(quiz_block, previous_block)
                     previous_block = quiz_block
                     inserted_count += 1
                     logger.debug(f"Created quiz block {quiz_block.id} for section '{section_title}'")
-                
+
             except Exception as e:
                 logger.error(f"Failed to create quiz block for section '{section_title}': {str(e)}")
                 continue
@@ -349,7 +348,7 @@ class GenerateQuizzesWorker(BaseWorker):
 
         analysis.status = AnalysisStatus.GENERATING_QUIZZES
         await analysis.save(link_rule=WriteRules.WRITE)
-        
+
         blocks = await get_blocks_in_order(analysis.paper.ref.id)
         logger.info(f"Retrieved {len(blocks)} blocks for paper {analysis.paper.ref.id}")
 
@@ -365,9 +364,9 @@ class GenerateQuizzesWorker(BaseWorker):
 
         for section in sections:
             logger.info(f"Generating quizzes for section: {section.title}")
-            
+
             quizzes = await self.quiz_generator.generate_quizzes(section.content, section.title)
-            
+
             if not quizzes:
                 logger.warning(f"No quizzes generated for section: {section.title}")
                 continue
@@ -382,7 +381,8 @@ class GenerateQuizzesWorker(BaseWorker):
             )
 
         await self._complete_analysis(analysis)
-        logger.info(f"Quiz generation completed for analysis {analysis.id}. Created {total_quizzes_created} quizzes across {len(sections)} sections")
+        logger.info(
+            f"Quiz generation completed for analysis {analysis.id}. Created {total_quizzes_created} quizzes across {len(sections)} sections")
 
     async def _complete_analysis(self, analysis: Analysis):
         """

@@ -4,7 +4,6 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 from src.logging import get_logger
-from src.models.block import Block
 from src.models.translation import Translation, LanguageCode
 from src.utils.object_id import validate_object_id_or_raise_http_exception
 from src.utils.translation import translate_block

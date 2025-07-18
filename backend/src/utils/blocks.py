@@ -5,9 +5,11 @@ from typing import Optional, List
 from beanie import WriteRules, PydanticObjectId
 
 from src.logging import get_logger
-from src.models.block import Header, BlockKind, Figure, Paragraph, Table, Equation, CodeBlock, Quote, Block, Callout, Reference, Footnote, Quiz
+from src.models.block import Header, BlockKind, Figure, Paragraph, Table, Equation, CodeBlock, Quote, Block, Callout, \
+    Reference, Footnote, Quiz
 from src.storage.s3 import storage_client, bucket_name
-from src.utils.markdown import HeaderBlock, FigureBlock, ParagraphBlock, TableBlock, EquationBlock, CodeBlock, \
+from src.utils.markdown import CodeBlock as MarkdownCodeBlock
+from src.utils.markdown import HeaderBlock, FigureBlock, ParagraphBlock, TableBlock, EquationBlock, \
     QuoteBlock, MarkdownBlock, CalloutBlock, ReferenceBlock, FootnoteBlock, QuizBlock
 
 logger = get_logger(__name__)
@@ -142,7 +144,7 @@ async def create_equation_block(block_info: EquationBlock, paper) -> Equation:
     )
 
 
-async def create_code_block(block_info: CodeBlock, paper) -> CodeBlock:
+async def create_code_block(block_info: MarkdownCodeBlock, paper) -> CodeBlock:
     """
     Create a code block from block info.
 
@@ -314,10 +316,10 @@ async def get_blocks_in_order(paper_id: PydanticObjectId) -> List[Block]:
         {"$match": {"paper.$id": paper_id}},
         {"$addFields": {"id": "$_id"}}  # Add id field for easier access
     ]
-    
+
     cursor = Block.aggregate(pipeline)
     block_docs = await cursor.to_list(length=None)
-    
+
     logger.info(f"Retrieved {len(block_docs)} blocks for paper {paper_id}")
 
     if not block_docs:
@@ -338,11 +340,11 @@ async def get_blocks_in_order(paper_id: PydanticObjectId) -> List[Block]:
         BlockKind.FOOTNOTE: Footnote,
         BlockKind.QUIZ: Quiz,
     }
-    
+
     for doc in block_docs:
         kind = BlockKind(doc["kind"])
         block_class = block_class_map.get(kind, Block)
-        
+
         try:
             # Create block instance from document
             block = block_class.model_validate(doc)
@@ -402,10 +404,10 @@ async def get_typed_block(block_id: PydanticObjectId) -> Optional[Block]:
     """
     # First get the document from the database
     doc = await Block.get_motor_collection().find_one({"_id": block_id})
-    
+
     if not doc:
         return None
-    
+
     # Map block kinds to their classes
     block_class_map = {
         BlockKind.HEADER: Header,
@@ -420,11 +422,11 @@ async def get_typed_block(block_id: PydanticObjectId) -> Optional[Block]:
         BlockKind.FOOTNOTE: Footnote,
         BlockKind.QUIZ: Quiz,
     }
-    
+
     # Get the appropriate class for this block kind
     kind = BlockKind(doc["kind"])
     block_class = block_class_map.get(kind, Block)
-    
+
     try:
         # Add id field for easier access
         doc["id"] = doc["_id"]
@@ -447,10 +449,10 @@ async def get_typed_blocks(block_ids: List[PydanticObjectId]) -> List[Block]:
     """
     # Get documents from the database
     docs = await Block.get_motor_collection().find({"_id": {"$in": block_ids}}).to_list(length=None)
-    
+
     if not docs:
         return []
-    
+
     # Map block kinds to their classes
     block_class_map = {
         BlockKind.HEADER: Header,
@@ -465,13 +467,13 @@ async def get_typed_blocks(block_ids: List[PydanticObjectId]) -> List[Block]:
         BlockKind.FOOTNOTE: Footnote,
         BlockKind.QUIZ: Quiz,
     }
-    
+
     typed_blocks = []
     for doc in docs:
         # Get the appropriate class for this block kind
         kind = BlockKind(doc["kind"])
         block_class = block_class_map.get(kind, Block)
-        
+
         try:
             # Add id field for easier access
             doc["id"] = doc["_id"]
@@ -483,5 +485,5 @@ async def get_typed_blocks(block_ids: List[PydanticObjectId]) -> List[Block]:
             # Fall back to base Block
             base_block = Block.model_validate(doc)
             typed_blocks.append(base_block)
-    
+
     return typed_blocks

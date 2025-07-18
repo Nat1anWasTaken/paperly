@@ -47,7 +47,7 @@ async def generate_chat_stream(paper_content: str, message: str, history: List[C
         with open(prompt_path, "r") as f:
             prompt_template = f.read()
     except FileNotFoundError:
-        yield f"event: error\ndata: Chat prompt template not found\n\n"
+        yield "event: error\ndata: Chat prompt template not found\n\n"
         return
 
     # Format the system prompt with paper content
