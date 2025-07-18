@@ -1,12 +1,11 @@
 import uuid
 from typing import List
 
-from beanie import PydanticObjectId
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel
 
 from src.logging import get_logger
-from src.models.block import Block, BlockMixin
+from src.models.block import BlockMixin
 from src.models.paper import Paper
 from src.storage.s3 import storage_client, bucket_name
 from src.utils.blocks import get_blocks_in_order
@@ -86,11 +85,13 @@ async def get_paper(paper_id: str):
 
     return paper
 
+
 class PaperBlocksResponse(BaseModel):
     """
     Response model for retrieving blocks of a paper.
     """
     blocks: List[BlockMixin]
+
 
 @router.get("/{paper_id}/blocks", response_model=PaperBlocksResponse)
 async def get_paper_blocks(paper_id: str):
