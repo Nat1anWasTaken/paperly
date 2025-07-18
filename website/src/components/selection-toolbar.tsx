@@ -6,8 +6,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Loader2, Sparkles, X, Languages } from 'lucide-react';
 import { useSelection } from '@/contexts/selection-context';
+import { useCreateSummary } from '@/hooks/use-analysis';
 import { api } from '@/lib/api';
-import { cn } from '@/lib/utils';
+
 
 const SUPPORTED_LANGUAGES = [
   { value: 'en_US', label: 'English (US)' },
@@ -22,19 +23,19 @@ const SUPPORTED_LANGUAGES = [
 export function SelectionToolbar() {
   const { selectedBlockIds, hasSelections, clearSelections } = useSelection();
   const [selectedLanguage, setSelectedLanguage] = useState('en_US');
-  const [isGenerating, setIsGenerating] = useState(false);
   const [summary, setSummary] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  
+  const createSummaryMutation = useCreateSummary();
 
   const handleGenerateSummary = async () => {
     if (!hasSelections) return;
 
-    setIsGenerating(true);
     setSummary('');
     setIsDialogOpen(true);
 
     try {
-      const stream = await api.createSummary({
+      const stream = await createSummaryMutation.mutateAsync({
         block_ids: selectedBlockIds,
         language: selectedLanguage,
       });
@@ -53,7 +54,6 @@ export function SelectionToolbar() {
           case 'completed':
             // Summary is complete
             console.log('Summary generation completed');
-            setIsGenerating(false);
             return; // Exit the loop
           default:
             console.log('Unknown event:', event, data);
@@ -62,8 +62,6 @@ export function SelectionToolbar() {
     } catch (error) {
       console.error('Error generating summary:', error);
       setSummary('Sorry, there was an error generating the summary. Please try again.');
-    } finally {
-      setIsGenerating(false);
     }
   };
 
@@ -98,7 +96,7 @@ export function SelectionToolbar() {
 
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
-              <Button onClick={handleGenerateSummary} disabled={isGenerating}>
+              <Button onClick={handleGenerateSummary} disabled={createSummaryMutation.isPending}>
                 <Sparkles className="w-4 h-4 mr-2" />
                 Generate Summary
               </Button>
@@ -111,7 +109,7 @@ export function SelectionToolbar() {
                 </DialogTitle>
               </DialogHeader>
               <div className="overflow-y-auto">
-                {isGenerating ? (
+                {createSummaryMutation.isPending ? (
                   <div className="flex items-center justify-center p-8">
                     <Loader2 className="w-6 h-6 animate-spin mr-2" />
                     <span>Generating summary...</span>

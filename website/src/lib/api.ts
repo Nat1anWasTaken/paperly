@@ -1,5 +1,5 @@
 // API configuration and utilities for Paperly backend
-import { Paper, PaperBlocksResponse, ApiPaperBlock, convertApiBlockToFrontendBlock, PaperBlock } from '@/data/types';
+import { Paper, PaperBlocksResponse, convertApiBlockToFrontendBlock, PaperBlock } from '@/data/types';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
 

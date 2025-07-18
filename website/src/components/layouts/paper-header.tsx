@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { FileText, Menu, MousePointer, MousePointer2 } from "lucide-react";
+import { FileText, Menu, MousePointer2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useSelection } from "@/contexts/selection-context";

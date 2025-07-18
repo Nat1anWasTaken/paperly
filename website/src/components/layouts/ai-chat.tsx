@@ -53,7 +53,7 @@ interface SpeechRecognition extends EventTarget {
   stop(): void;
 }
 
-declare var SpeechRecognition: {
+declare const SpeechRecognition: {
   prototype: SpeechRecognition;
   new(): SpeechRecognition;
 };
@@ -65,12 +65,15 @@ interface ChatMessage {
   timestamp: Date;
 }
 
+
+
 interface AiChatProps {
   paperId: string;
 }
 
 // Custom components for ReactMarkdown
-const markdownComponents = {
+/* eslint-disable @typescript-eslint/no-explicit-any */
+const markdownComponents: any = {
   // Headers
   h1: ({ children, ...props }: any) => (
     <h1 className="text-2xl font-bold mb-4 mt-6 text-primary" {...props}>{children}</h1>
@@ -155,15 +158,13 @@ const markdownComponents = {
     <hr className="my-4 border-t border-border" {...props} />
   ),
 };
+/* eslint-enable @typescript-eslint/no-explicit-any */
 
 function parseWithMath(content: string): React.ReactNode {
-  const parts: React.ReactNode[] = [];
-  let lastIndex = 0;
   let keyCounter = 0;
 
   // First handle display math \[...\]
   const displayMathRegex = /\\\[([\s\S]*?)\\\]/g;
-  let match;
   const processedContent = content.replace(displayMathRegex, (match, mathContent) => {
     return `___DISPLAY_MATH_${keyCounter++}___${mathContent}___END_DISPLAY_MATH___`;
   });
@@ -404,7 +405,7 @@ export function AiChat({ paperId }: AiChatProps) {
                         : msg
                     )
                   );
-                } catch (e) {
+                } catch {
                   // If it's not valid JSON, treat as plain text
                   setChatMessages((prev) => 
                     prev.map((msg) => 

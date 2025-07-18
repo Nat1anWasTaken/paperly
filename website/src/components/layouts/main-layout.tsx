@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 import { AiChat } from "./ai-chat";
 import { PaperNavigation } from "./paper-navigation";
@@ -21,6 +22,7 @@ export function MainLayout({
   paperData,
   currentSectionId = "",
 }: MainLayoutProps) {
+  const router = useRouter();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = React.useState(false);
   const [activeSectionId, setActiveSectionId] = React.useState(currentSectionId);
 
@@ -48,11 +50,9 @@ export function MainLayout({
         });
       }
     } else {
-      // If element not found on current page, navigate to it
+      // If element not found on current page, navigate to it using Next.js router
       const targetSectionUrl = `/${paperData.paper.id}/${sectionId}`;
-      if (window.location.pathname !== targetSectionUrl) {
-        window.location.href = targetSectionUrl;
-      }
+      router.push(targetSectionUrl);
     }
   };
 
@@ -131,7 +131,6 @@ export function MainLayout({
         <PaperNavigationFooter
           currentSectionIndex={currentSectionIndex}
           totalSections={paperSections.length}
-          currentSectionTitle={paperSections[currentSectionIndex]?.title || ""}
           onSectionNavigation={handleSectionNavigation}
         />
 

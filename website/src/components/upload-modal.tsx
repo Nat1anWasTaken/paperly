@@ -40,7 +40,7 @@ export function UploadModal({ trigger }: UploadModalProps) {
         monitorAnalysis(analysis.id, analysis.analysisId);
       }
     });
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Monitor analysis progress
   const monitorAnalysis = useCallback(async (id: string, analysisId: string) => {
@@ -116,7 +116,7 @@ export function UploadModal({ trigger }: UploadModalProps) {
 
     const files = Array.from(e.dataTransfer.files);
     handleFiles(files);
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -128,7 +128,7 @@ export function UploadModal({ trigger }: UploadModalProps) {
     }
   };
 
-  const handleFiles = async (files: File[]) => {
+  const handleFiles = useCallback(async (files: File[]) => {
     const pdfFiles = files.filter(file => file.type === "application/pdf");
     
     if (pdfFiles.length === 0) {
@@ -140,9 +140,9 @@ export function UploadModal({ trigger }: UploadModalProps) {
     for (const file of pdfFiles) {
       await uploadFile(file);
     }
-  };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const uploadFile = async (file: File) => {
+  const uploadFile = useCallback(async (file: File) => {
     const newAnalysisId = Date.now().toString();
     
     // Create initial stored analysis
@@ -191,7 +191,7 @@ export function UploadModal({ trigger }: UploadModalProps) {
       });
       setUploadHistory(AnalysisStorage.getAll());
     }
-  };
+  }, [monitorAnalysis, setUploadHistory]);
 
   const deletePaper = (id: string) => {
     AnalysisStorage.delete(id);

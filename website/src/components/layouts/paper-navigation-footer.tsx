@@ -7,14 +7,12 @@ import { Button } from "@/components/ui/button";
 interface PaperNavigationFooterProps {
   currentSectionIndex: number;
   totalSections: number;
-  currentSectionTitle: string;
   onSectionNavigation: (direction: 'prev' | 'next') => void;
 }
 
 export function PaperNavigationFooter({ 
   currentSectionIndex,
   totalSections,
-  currentSectionTitle,
   onSectionNavigation 
 }: PaperNavigationFooterProps) {
   const handlePreviousSection = () => {

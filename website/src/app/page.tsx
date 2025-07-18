@@ -1,6 +1,6 @@
 "use client";
 
-import { samplePaper } from "@/data/sample-paper";
+
 import { PaperScrollAnimation } from "@/components/paper-scroll-animation";
 import { UploadModal } from "@/components/upload-modal";
 import { Upload, FileText } from "lucide-react";

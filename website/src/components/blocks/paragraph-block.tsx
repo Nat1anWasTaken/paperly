@@ -8,10 +8,22 @@ interface ParagraphBlockProps {
   block: ParagraphBlock;
 }
 
+// Types for MDX components
+interface MDXLinkProps {
+  href?: string;
+  children: React.ReactNode;
+  [key: string]: unknown;
+}
+
+interface MDXElementProps {
+  children: React.ReactNode;
+  [key: string]: unknown;
+}
+
 // Custom components for MDX rendering
 const mdxComponents = {
   // Custom link component for references
-  a: ({ href, children, ...props }: any) => (
+  a: ({ href, children, ...props }: MDXLinkProps) => (
     <a
       href={href}
       className="text-primary hover:text-primary/80 underline font-medium transition-colors"
@@ -31,19 +43,19 @@ const mdxComponents = {
     </a>
   ),
   // Custom paragraph to avoid nested paragraphs
-  p: ({ children, ...props }: any) => (
+  p: ({ children, ...props }: MDXElementProps) => (
     <span {...props}>{children}</span>
   ),
   // Bold text
-  strong: ({ children, ...props }: any) => (
+  strong: ({ children, ...props }: MDXElementProps) => (
     <strong className="font-semibold" {...props}>{children}</strong>
   ),
   // Italic text
-  em: ({ children, ...props }: any) => (
+  em: ({ children, ...props }: MDXElementProps) => (
     <em className="italic" {...props}>{children}</em>
   ),
   // Code inline
-  code: ({ children, ...props }: any) => (
+  code: ({ children, ...props }: MDXElementProps) => (
     <code className="bg-muted px-1.5 py-0.5 text-sm font-mono border rounded" {...props}>
       {children}
     </code>

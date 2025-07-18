@@ -270,7 +270,7 @@ export function convertApiBlockToFrontendBlock(apiBlock: ApiPaperBlock, index: n
     case BlockKind.QUIZ:
       return { ...baseBlock, ...apiBlock } as QuizBlock;
     default:
-      throw new Error(`Unknown block kind: ${(apiBlock as any).kind}`);
+      throw new Error(`Unknown block kind: ${(apiBlock as { kind: unknown }).kind}`);
   }
 }
 

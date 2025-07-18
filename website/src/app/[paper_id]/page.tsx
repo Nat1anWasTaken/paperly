@@ -2,8 +2,8 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { api } from "@/lib/api";
-import { PaperBlock, BlockKind } from "@/data/types";
+import { usePaperBlocks, usePrefetchPaper } from "@/hooks/use-papers";
+import { PaperBlock, BlockKind, HeaderBlock } from "@/data/types";
 
 interface PaperPageProps {
   params: Promise<{
@@ -15,7 +15,7 @@ interface PaperPageProps {
 function findFirstSection(blocks: PaperBlock[]): string | null {
   // Look for the first header that could serve as a section
   for (const block of blocks) {
-    if (block.kind === BlockKind.HEADER && block.level <= 2) {
+    if (block.kind === BlockKind.HEADER && (block as HeaderBlock).level <= 2) {
       return `section-${block.id}`;
     }
   }
@@ -31,45 +31,29 @@ function findFirstSection(blocks: PaperBlock[]): string | null {
 export default function PaperPage({ params }: PaperPageProps) {
   const { paper_id } = React.use(params);
   const router = useRouter();
+  const { prefetchPaper } = usePrefetchPaper();
   
-  const [loading, setLoading] = React.useState(true);
-  const [error, setError] = React.useState<string | null>(null);
+  const { data: blocks, isLoading: loading, error } = usePaperBlocks(paper_id);
+
+  // Prefetch all paper data immediately when this page loads
+  React.useEffect(() => {
+    prefetchPaper(paper_id);
+  }, [paper_id, prefetchPaper]);
 
   React.useEffect(() => {
-    async function fetchAndRedirect() {
-      try {
-        setLoading(true);
-        setError(null);
-
-        console.log('Fetching blocks for paper:', paper_id);
-        
-        // Fetch the blocks to determine the first section
-        const blocks = await api.getPaperBlocksForUI(paper_id);
-        
-        console.log('Fetched blocks:', blocks.length);
-        
-        const firstSectionId = findFirstSection(blocks);
-        
-        console.log('First section ID:', firstSectionId);
-        
-        if (firstSectionId) {
-          // Use router.replace instead of redirect
-          router.replace(`/${paper_id}/${firstSectionId}`);
-        } else {
-          setError("No content found in this paper");
-          setLoading(false);
-        }
-      } catch (err) {
-        console.error('Failed to fetch paper blocks:', err);
-        const errorMessage = err instanceof Error ? err.message : 'Failed to load paper';
-        console.log('Error details:', errorMessage);
-        setError(errorMessage);
-        setLoading(false);
+    if (blocks && !loading) {
+      console.log('Fetched blocks:', blocks.length);
+      
+      const firstSectionId = findFirstSection(blocks);
+      
+      console.log('First section ID:', firstSectionId);
+      
+      if (firstSectionId) {
+        // Use router.replace instead of redirect
+        router.replace(`/${paper_id}/${firstSectionId}`);
       }
     }
-
-    fetchAndRedirect();
-  }, [paper_id, router]);
+  }, [blocks, loading, paper_id, router]);
 
   if (loading) {
     return (
@@ -87,13 +71,25 @@ export default function PaperPage({ params }: PaperPageProps) {
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-4 text-destructive">Error Loading Paper</h1>
-          <p className="text-muted-foreground mb-4">{error}</p>
+          <p className="text-muted-foreground mb-4">{error instanceof Error ? error.message : "Failed to load paper"}</p>
           <button 
             onClick={() => window.location.reload()} 
             className="px-4 py-2 bg-primary text-primary-foreground rounded hover:bg-primary/90"
           >
             Try Again
           </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Check if blocks are loaded but empty
+  if (!loading && blocks && blocks.length === 0) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">No Content Found</h1>
+          <p className="text-muted-foreground">No content found in this paper.</p>
         </div>
       </div>
     );

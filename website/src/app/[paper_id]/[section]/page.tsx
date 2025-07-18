@@ -4,13 +4,9 @@ import * as React from "react";
 import { MainLayout } from "@/components/layouts/main-layout";
 import { BlockRenderer } from "@/components/blocks";
 import { notFound } from "next/navigation";
-import { api } from "@/lib/api";
+import { usePaperData } from "@/hooks/use-papers";
 import {
-  Paper,
-  PaperBlock,
   PaperData,
-  PaperSection,
-  BlockKind,
   FrontendPaper,
 } from "@/data/types";
 
@@ -21,85 +17,23 @@ interface PaperSectionPageProps {
   }>;
 }
 
-// Helper function to organize blocks into sections based on headers
-function organizeBlocksIntoSections(blocks: PaperBlock[]): PaperSection[] {
-  const sections: PaperSection[] = [];
-  let currentSection: PaperSection | null = null;
 
-  blocks.forEach((block) => {
-    if (block.kind === BlockKind.HEADER && block.level <= 2) {
-      // Create a new section for H1 and H2 headers
-      if (currentSection) {
-        sections.push(currentSection);
-      }
-
-      currentSection = {
-        id: `section-${block.id}`,
-        title: block.text,
-        level: block.level,
-        blocks: [block],
-      };
-    } else {
-      // Add block to current section, or create a default section if none exists
-      if (!currentSection) {
-        currentSection = {
-          id: "section-default",
-          title: "Content",
-          level: 1,
-          blocks: [],
-        };
-      }
-      currentSection.blocks.push(block);
-    }
-  });
-
-  // Don't forget the last section
-  if (currentSection) {
-    sections.push(currentSection);
-  }
-
-  return sections;
-}
 
 export default function PaperSectionPage({ params }: PaperSectionPageProps) {
   const { paper_id, section } = React.use(params);
 
-  const [paper, setPaper] = React.useState<Paper | null>(null);
-  const [blocks, setBlocks] = React.useState<PaperBlock[]>([]);
-  const [sections, setSections] = React.useState<PaperSection[]>([]);
-  const [loading, setLoading] = React.useState(true);
-  const [error, setError] = React.useState<string | null>(null);
+  const { 
+    paper, 
+    sections, 
+    isLoading: loading, 
+    isRefetching,
+    isError, 
+    error,
+    hasCachedData 
+  } = usePaperData(paper_id);
 
-  React.useEffect(() => {
-    async function fetchPaperData() {
-      try {
-        setLoading(true);
-        setError(null);
-
-        // Fetch paper info and blocks in parallel
-        const [paperData, blocksData] = await Promise.all([
-          api.getPaper(paper_id),
-          api.getPaperBlocksForUI(paper_id),
-        ]);
-
-        setPaper(paperData);
-        setBlocks(blocksData);
-
-        // Organize blocks into sections
-        const organizedSections = organizeBlocksIntoSections(blocksData);
-        setSections(organizedSections);
-      } catch (err) {
-        console.error("Failed to fetch paper data:", err);
-        setError(err instanceof Error ? err.message : "Failed to load paper");
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchPaperData();
-  }, [paper_id]);
-
-  if (loading) {
+  // Only show full loading screen if we have no cached data
+  if (loading && !hasCachedData) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -110,14 +44,14 @@ export default function PaperSectionPage({ params }: PaperSectionPageProps) {
     );
   }
 
-  if (error) {
+  if (isError || error) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-4 text-destructive">
             Error Loading Paper
           </h1>
-          <p className="text-muted-foreground mb-4">{error}</p>
+          <p className="text-muted-foreground mb-4">{error instanceof Error ? error.message : "Failed to load paper"}</p>
           <button
             onClick={() => window.location.reload()}
             className="px-4 py-2 bg-primary text-primary-foreground rounded hover:bg-primary/90"
@@ -129,7 +63,7 @@ export default function PaperSectionPage({ params }: PaperSectionPageProps) {
     );
   }
 
-  if (!paper) {
+  if (!paper || !sections) {
     notFound();
   }
 
@@ -152,13 +86,20 @@ export default function PaperSectionPage({ params }: PaperSectionPageProps) {
     pages: [
       {
         pageNumber: 1,
-        sections: sections,
+        sections,
       },
     ],
   };
 
   return (
     <MainLayout paperData={paperData} currentSectionId={section}>
+      {/* Subtle loading indicator for background refreshes */}
+      {isRefetching && hasCachedData && (
+        <div className="fixed top-0 left-0 right-0 h-1 bg-primary/20 z-50">
+          <div className="h-full bg-primary animate-pulse" />
+        </div>
+      )}
+      
       <article className="space-y-8">
         <div key={currentSection.id} id={currentSection.id} className="section">
           <div className="space-y-6">

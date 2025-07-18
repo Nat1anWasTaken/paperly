@@ -1,8 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { Paper } from "@/data/types";
-import { api } from "@/lib/api";
+
+import { usePapers, usePrefetchPaper } from "@/hooks/use-papers";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -10,28 +10,9 @@ import { FileText, Home, Calendar, ExternalLink, Loader2, AlertCircle, Clock, Pl
 import Link from "next/link";
 
 export default function PapersPage() {
-  const [papers, setPapers] = React.useState<Paper[]>([]);
   const [searchQuery, setSearchQuery] = React.useState("");
-  const [loading, setLoading] = React.useState(true);
-  const [error, setError] = React.useState<string | null>(null);
-
-  React.useEffect(() => {
-    async function fetchPapers() {
-      try {
-        setLoading(true);
-        setError(null);
-        const fetchedPapers = await api.getPapers();
-        setPapers(fetchedPapers);
-      } catch (err) {
-        console.error("Failed to fetch papers:", err);
-        setError(err instanceof Error ? err.message : "Failed to load papers");
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchPapers();
-  }, []);
+  const { data: papers = [], isLoading: loading, error } = usePapers();
+  const { prefetchPaper } = usePrefetchPaper();
 
   // Filter papers based on search query
   const filteredPapers = React.useMemo(() => {
@@ -135,7 +116,7 @@ export default function PapersPage() {
                 <AlertCircle className="w-8 h-8 text-destructive" />
               </div>
               <h3 className="text-xl font-semibold mb-2 text-foreground">Failed to load papers</h3>
-              <p className="text-muted-foreground mb-6">{error}</p>
+              <p className="text-muted-foreground mb-6">{error instanceof Error ? error.message : "Failed to load papers"}</p>
               <Button onClick={() => window.location.reload()} className="flex items-center gap-2">
                 <Loader2 className="w-4 h-4" />
                 Try Again
@@ -172,7 +153,7 @@ export default function PapersPage() {
                   </div>
                   {searchQuery && (
                     <p className="text-sm text-muted-foreground mt-2">
-                      {filteredPapers.length} {filteredPapers.length === 1 ? "paper" : "papers"} found for "{searchQuery}"
+                      {filteredPapers.length} {filteredPapers.length === 1 ? "paper" : "papers"} found for &ldquo;{searchQuery}&rdquo;
                     </p>
                   )}
                 </div>
@@ -222,7 +203,7 @@ export default function PapersPage() {
                 </div>
                 <h3 className="text-2xl font-semibold mb-3 text-foreground">No papers found</h3>
                 <p className="text-muted-foreground mb-8 max-w-md mx-auto">
-                  No papers match your search for "{searchQuery}". Try a different search term.
+                  No papers match your search for &ldquo;{searchQuery}&rdquo;. Try a different search term.
                 </p>
                 <Button onClick={clearSearch} variant="outline" className="flex items-center gap-2">
                   <X className="w-4 h-4" />
@@ -235,6 +216,12 @@ export default function PapersPage() {
                   <div
                     key={paper._id || index}
                     className="group relative bg-card border border-border rounded-xl p-6 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 hover:border-primary/20 hover:-translate-y-1"
+                    onMouseEnter={() => {
+                      // Prefetch paper data on hover for better UX
+                      if (paper._id) {
+                        prefetchPaper(paper._id);
+                      }
+                    }}
                   >
                     {/* Paper Icon */}
                     <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/15 transition-colors">

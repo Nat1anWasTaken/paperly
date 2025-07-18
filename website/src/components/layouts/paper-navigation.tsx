@@ -4,6 +4,7 @@ import * as React from "react";
 import { ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { usePrefetchPaper } from "@/hooks/use-papers";
 
 interface PaperSection {
   id: string;
@@ -26,6 +27,7 @@ export function PaperNavigation({
   onToggleSidebar,
   paperId,
 }: PaperNavigationProps) {
+  const { prefetchPaper } = usePrefetchPaper();
   return (
     <div className="h-full overflow-y-auto bg-card">
       <div className="p-6">
@@ -55,6 +57,10 @@ export function PaperNavigation({
                   "bg-accent text-accent-foreground"
               )}
               onClick={() => onSectionClick(section.id)}
+              onMouseEnter={() => {
+                // Prefetch paper data when hovering over navigation items
+                prefetchPaper(paperId);
+              }}
             >
               <span className="text-sm text-muted-foreground mr-2">
                 {section.level === 1
