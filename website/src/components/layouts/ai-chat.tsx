@@ -1,11 +1,17 @@
 "use client";
 
 import * as React from "react";
-import { Bot, Send, Mic, MicOff, Volume2 } from "lucide-react";
+import { Bot, Send, Mic, Volume2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
+import { api } from "@/lib/api";
+import ReactMarkdown from 'react-markdown';
+import remarkBreaks from 'remark-breaks';
+import remarkGfm from 'remark-gfm';
+import { InlineMath, BlockMath } from 'react-katex';
+import 'katex/dist/katex.min.css';
 
 // Type declarations for Speech APIs
 declare global {
@@ -55,17 +61,173 @@ declare var SpeechRecognition: {
 interface ChatMessage {
   id: string;
   content: string;
-  isUser: boolean;
+  role: "user" | "assistant";
   timestamp: Date;
 }
 
-export function AiChat() {
+interface AiChatProps {
+  paperId: string;
+}
+
+// Custom components for ReactMarkdown
+const markdownComponents = {
+  // Headers
+  h1: ({ children, ...props }: any) => (
+    <h1 className="text-2xl font-bold mb-4 mt-6 text-primary" {...props}>{children}</h1>
+  ),
+  h2: ({ children, ...props }: any) => (
+    <h2 className="text-xl font-bold mb-3 mt-5 text-primary" {...props}>{children}</h2>
+  ),
+  h3: ({ children, ...props }: any) => (
+    <h3 className="text-lg font-bold mb-3 mt-4 text-primary" {...props}>{children}</h3>
+  ),
+  h4: ({ children, ...props }: any) => (
+    <h4 className="text-base font-bold mb-2 mt-3 text-primary" {...props}>{children}</h4>
+  ),
+  
+  // Paragraphs
+  p: ({ children, ...props }: any) => (
+    <p className="mb-3 leading-relaxed" {...props}>{children}</p>
+  ),
+  
+  // Lists
+  ul: ({ children, ...props }: any) => (
+    <ul className="mb-3 pl-4 space-y-1 list-disc list-inside" {...props}>{children}</ul>
+  ),
+  ol: ({ children, ...props }: any) => (
+    <ol className="mb-3 pl-4 space-y-1 list-decimal list-inside" {...props}>{children}</ol>
+  ),
+  li: ({ children, ...props }: any) => (
+    <li className="leading-relaxed" {...props}>{children}</li>
+  ),
+  
+  // Code
+  code: ({ inline, children, className, ...props }: any) => {
+    if (inline) {
+      return (
+        <code className="bg-muted px-1.5 py-0.5 text-sm font-mono border rounded" {...props}>
+          {children}
+        </code>
+      );
+    }
+    return (
+      <pre className="bg-muted p-3 rounded-md overflow-x-auto text-sm font-mono mb-3 border">
+        <code className={className} {...props}>{children}</code>
+      </pre>
+    );
+  },
+  
+  // Links
+  a: ({ href, children, ...props }: any) => (
+    <a
+      href={href}
+      className="text-primary hover:text-primary/80 underline font-medium transition-colors"
+      target="_blank"
+      rel="noopener noreferrer"
+      {...props}
+    >
+      {children}
+    </a>
+  ),
+  
+  // Strong/Bold
+  strong: ({ children, ...props }: any) => (
+    <strong className="font-semibold" {...props}>{children}</strong>
+  ),
+  
+  // Emphasis/Italic
+  em: ({ children, ...props }: any) => (
+    <em className="italic" {...props}>{children}</em>
+  ),
+  
+  // Blockquotes
+  blockquote: ({ children, ...props }: any) => (
+    <blockquote className="border-l-4 border-primary/30 pl-4 my-3 italic text-muted-foreground" {...props}>
+      {children}
+    </blockquote>
+  ),
+
+  // Break lines
+  br: () => <br className="my-1" />,
+
+  // Horizontal rules
+  hr: ({ ...props }: any) => (
+    <hr className="my-4 border-t border-border" {...props} />
+  ),
+};
+
+function parseWithMath(content: string): React.ReactNode {
+  const parts: React.ReactNode[] = [];
+  let lastIndex = 0;
+  let keyCounter = 0;
+
+  // First handle display math \[...\]
+  const displayMathRegex = /\\\[([\s\S]*?)\\\]/g;
+  let match;
+  const processedContent = content.replace(displayMathRegex, (match, mathContent) => {
+    return `___DISPLAY_MATH_${keyCounter++}___${mathContent}___END_DISPLAY_MATH___`;
+  });
+
+  // Then handle inline math \(...\)
+  const finalContent = processedContent.replace(/\\\((.*?)\\\)/g, (match, mathContent) => {
+    return `___INLINE_MATH_${keyCounter++}___${mathContent}___END_INLINE_MATH___`;
+  });
+
+  // Split by math placeholders and process
+  const segments = finalContent.split(/(___(?:DISPLAY|INLINE)_MATH_\d+___.*?___END_(?:DISPLAY|INLINE)_MATH___)/);
+  
+  return segments.map((segment, index) => {
+    if (segment.startsWith('___DISPLAY_MATH_')) {
+      const mathContent = segment.match(/___DISPLAY_MATH_\d+___(.*?)___END_DISPLAY_MATH___/)?.[1] || '';
+      return (
+        <div key={index} className="my-4">
+          <BlockMath math={mathContent} />
+        </div>
+      );
+    } else if (segment.startsWith('___INLINE_MATH_')) {
+      const mathContent = segment.match(/___INLINE_MATH_\d+___(.*?)___END_INLINE_MATH___/)?.[1] || '';
+      return <InlineMath key={index} math={mathContent} />;
+    } else {
+      // Regular markdown content
+      return (
+        <ReactMarkdown
+          key={index}
+          remarkPlugins={[remarkBreaks, remarkGfm]}
+          components={markdownComponents}
+          skipHtml={false}
+        >
+          {segment}
+        </ReactMarkdown>
+      );
+    }
+  });
+}
+
+function MessageContent({ message }: { message: ChatMessage }) {
+  if (message.role === "user") {
+    return <span>{message.content}</span>;
+  }
+
+  // Clean up the content for better markdown parsing
+  const cleanContent = message.content
+    .replace(/\\n/g, '\n')  // Convert literal \n to actual newlines
+    .replace(/\n\n+/g, '\n\n')  // Normalize multiple newlines
+    .trim();
+
+  return (
+    <div className="prose prose-sm max-w-none dark:prose-invert">
+      {parseWithMath(cleanContent)}
+    </div>
+  );
+}
+
+export function AiChat({ paperId }: AiChatProps) {
   const [chatMessages, setChatMessages] = React.useState<ChatMessage[]>([
     {
       id: "1",
       content:
         "Hello! I'm here to help you understand this research paper. Feel free to ask me any questions about the content, methodology, or findings.",
-      isUser: false,
+      role: "assistant",
       timestamp: new Date(),
     },
   ]);
@@ -77,6 +239,7 @@ export function AiChat() {
   
   const recognitionRef = React.useRef<SpeechRecognition | null>(null);
   const synthRef = React.useRef<SpeechSynthesis | null>(null);
+  const scrollAreaRef = React.useRef<HTMLDivElement>(null);
 
   // Initialize speech recognition and synthesis
   React.useEffect(() => {
@@ -111,6 +274,16 @@ export function AiChat() {
       }
     }
   }, []);
+
+  // Auto-scroll to bottom when new messages are added
+  React.useEffect(() => {
+    if (scrollAreaRef.current) {
+      const scrollContainer = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
+      if (scrollContainer) {
+        scrollContainer.scrollTop = scrollContainer.scrollHeight;
+      }
+    }
+  }, [chatMessages]);
 
   const toggleListening = () => {
     if (isListening) {
@@ -158,31 +331,112 @@ export function AiChat() {
   };
 
   const handleSendMessage = async () => {
-    if (!inputMessage.trim() || isLoading) return;
+    if (!inputMessage.trim() || isLoading || !paperId) return;
 
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
       content: inputMessage,
-      isUser: true,
+      role: "user",
       timestamp: new Date(),
     };
 
     setChatMessages((prev) => [...prev, userMessage]);
+    const messageToSend = inputMessage;
     setInputMessage("");
     setIsLoading(true);
 
-    // Simulate AI response (replace with actual AI integration)
-    setTimeout(() => {
+    try {
+      // Get chat history in the format expected by the API
+      const history = chatMessages.map(msg => ({
+        role: msg.role,
+        content: msg.content
+      }));
+
+      const response = await api.chatWithPaper(paperId, messageToSend, history, 'en_US');
+
+      // Create placeholder for streaming response
+      const aiMessageId = (Date.now() + 1).toString();
       const aiMessage: ChatMessage = {
-        id: (Date.now() + 1).toString(),
-        content:
-          "I understand your question about the paper. Let me analyze the content and provide you with a detailed response based on the research findings.",
-        isUser: false,
+        id: aiMessageId,
+        content: "",
+        role: "assistant",
         timestamp: new Date(),
       };
+
       setChatMessages((prev) => [...prev, aiMessage]);
+
+      // Handle streaming response
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+
+      if (reader) {
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            const chunk = decoder.decode(value, { stream: true });
+            const lines = chunk.split('\n');
+
+            for (const line of lines) {
+              if (line.trim() && line.startsWith('data: ')) {
+                const data = line.slice(6); // Remove 'data: ' prefix
+                if (data === '[DONE]') {
+                  break;
+                }
+
+                // Filter out control messages
+                if (
+                  data.includes('Starting chat response...') ||
+                  data.includes('Starting chat end') ||
+                  data.includes('Chat response completed') ||
+                  data.trim() === ''
+                ) {
+                  continue;
+                }
+
+                try {
+                  // If it's not JSON, treat it as raw text
+                  setChatMessages((prev) => 
+                    prev.map((msg) => 
+                      msg.id === aiMessageId 
+                        ? { ...msg, content: msg.content + data }
+                        : msg
+                    )
+                  );
+                } catch (e) {
+                  // If it's not valid JSON, treat as plain text
+                  setChatMessages((prev) => 
+                    prev.map((msg) => 
+                      msg.id === aiMessageId 
+                        ? { ...msg, content: msg.content + data }
+                        : msg
+                    )
+                  );
+                }
+              }
+            }
+          }
+        } finally {
+          reader.releaseLock();
+        }
+      }
+
+    } catch (error) {
+      console.error('Chat error:', error);
+      
+      // Add error message
+      const errorMessage: ChatMessage = {
+        id: (Date.now() + 2).toString(),
+        content: "I apologize, but I'm having trouble connecting to the chat service right now. Please try again later.",
+        role: "assistant",
+        timestamp: new Date(),
+      };
+      
+      setChatMessages((prev) => [...prev, errorMessage]);
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -207,26 +461,26 @@ export function AiChat() {
 
       {/* Chat Messages */}
       <div className="flex-1 min-h-0 p-4">
-        <ScrollArea className="h-full w-full">
+        <ScrollArea ref={scrollAreaRef} className="h-full w-full">
           <div className="space-y-4 pr-4">
             {chatMessages.map((message) => (
               <div
                 key={message.id}
                 className={cn(
                   "flex w-full",
-                  message.isUser ? "justify-end" : "justify-start"
+                  message.role === "user" ? "justify-end" : "justify-start"
                 )}
               >
                 <div
                   className={cn(
                     "max-w-[85%] p-3 rounded-lg text-sm relative group",
-                    message.isUser
+                    message.role === "user"
                       ? "bg-primary text-primary-foreground ml-8"
                       : "bg-muted text-muted-foreground mr-8"
                   )}
                 >
-                  {message.content}
-                  {!message.isUser && speechSupported && (
+                  <MessageContent message={message} />
+                  {message.role === "assistant" && speechSupported && message.content && (
                     <Button
                       variant="ghost"
                       size="sm"

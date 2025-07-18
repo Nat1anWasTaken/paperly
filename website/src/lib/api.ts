@@ -164,6 +164,34 @@ export class PaperlyAPI {
     console.log('API: Converted blocks:', convertedBlocks.length);
     return convertedBlocks;
   }
+
+  /**
+   * Chat with a paper
+   */
+  async chatWithPaper(
+    paperId: string,
+    message: string,
+    history: Array<{ role: string; content: string }> = [],
+    language: string = 'en_US'
+  ): Promise<Response> {
+    const response = await fetch(`${this.baseUrl}/chat/${paperId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        message,
+        history,
+        language
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Chat request failed: ${response.statusText}`);
+    }
+
+    return response;
+  }
 }
 
 // Default API instance
