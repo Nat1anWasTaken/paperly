@@ -19,9 +19,10 @@ class S3Config(BaseModel):
 
 
 class OpenAIConfig(BaseModel):
-    api_base_url: Optional[str] = None
+    endpoint: Optional[str] = None
     api_key: str
     model: str = "gpt-4o"
+
 
 class DocumentIntelligenceConfig(BaseModel):
     endpoint: Optional[str] = None
@@ -62,7 +63,7 @@ class Settings(BaseModel):
                 secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY")
             ),
             openai=OpenAIConfig(
-                api_base_url=os.getenv("AZURE_OPENAI_API_ENDPOINT", "https://api.openai.com/v1"),
+                endpoint=os.getenv("AZURE_OPENAI_API_ENDPOINT"),
                 api_key=os.getenv("AZURE_OPENAI_API_KEY"),
                 model=os.getenv("AZURE_OPENAI_MODEL", "gpt-4o")
             ),
