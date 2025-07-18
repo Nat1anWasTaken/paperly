@@ -116,9 +116,12 @@ class MarkdownExtractionWorker:
             file_object = download_file_from_bucket(analysis.file_key)
             logger.debug(f"File downloaded for analysis {analysis.id}, converting to markdown")
 
+            loop = asyncio.get_event_loop()
+
             rendered = self.converter(file_object)
-            markdown_content, _, images = text_from_rendered(rendered)
+            markdown_content, _, images = await loop.run_in_executor(None, text_from_rendered, rendered)
             markdown_length = len(markdown_content) if markdown_content else 0
+
             logger.info(f"Markdown extraction completed for analysis {analysis.id} ({markdown_length} characters)")
 
             updated_markdown = process_images_and_update_markdown(markdown_content, images)
