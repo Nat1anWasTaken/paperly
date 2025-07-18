@@ -25,7 +25,7 @@ class Block(UnionDoc):
     """Base union document for all block types."""
     kind: BlockKind
     paper: Link[Paper]
-    index: int  # Position of the block in the paper, starting from 0
+    next_block: Optional[Link["Block"]] = None  # Link to the next block in the paper
 
     class Settings:
         name = "blocks"
@@ -36,7 +36,7 @@ class Paragraph(Document):
     """Paragraph block containing text content."""
     kind: BlockKind
     paper: Link[Paper]
-    index: int
+    next_block: Optional[Link[Block]] = None
     title: Optional[str]
     text: str
 
@@ -48,7 +48,7 @@ class Header(Document):
     """Header block with hierarchical level and text."""
     kind: BlockKind
     paper: Link[Paper]
-    index: int
+    next_block: Optional[Link[Block]] = None
     level: int  # 1 to 6
     text: str
 
@@ -60,7 +60,7 @@ class Figure(Document):
     """Figure block containing image and caption."""
     kind: BlockKind
     paper: Link[Paper]
-    index: int
+    next_block: Optional[Link[Block]] = None
     caption: Optional[str]
     image_url: Optional[str]
     figure_number: Optional[int]
@@ -73,7 +73,7 @@ class Table(Document):
     """Table block with structured data."""
     kind: BlockKind
     paper: Link[Paper]
-    index: int
+    next_block: Optional[Link[Block]] = None
     caption: Optional[str]
     title: Optional[str]
     columns: list[str]  # Column headers
@@ -87,7 +87,7 @@ class Equation(Document):
     """Equation block with mathematical expressions."""
     kind: BlockKind
     paper: Link[Paper]
-    index: int
+    next_block: Optional[Link[Block]] = None
     caption: Optional[str]
     equation: str  # LaTeX or MathML representation
 
@@ -99,7 +99,7 @@ class CodeBlock(Document):
     """Code block with syntax highlighting."""
     kind: BlockKind
     paper: Link[Paper]
-    index: int
+    next_block: Optional[Link[Block]] = None
     code: str
     language: Optional[str]  # Programming language of the code block
 
@@ -111,7 +111,7 @@ class Quote(Document):
     """Quote block with text and optional author."""
     kind: BlockKind
     paper: Link[Paper]
-    index: int
+    next_block: Optional[Link[Block]] = None
     text: str
     author: Optional[str]
 
@@ -123,7 +123,7 @@ class Callout(Document):
     """Callout block for highlighting important information."""
     kind: BlockKind
     paper: Link[Paper]
-    index: int
+    next_block: Optional[Link[Block]] = None
     text: str
 
     class Settings:
@@ -134,7 +134,7 @@ class Reference(Document):
     """Reference block for citations and bibliography."""
     kind: BlockKind
     paper: Link[Paper]
-    index: int
+    next_block: Optional[Link[Block]] = None
     title: str
     authors: list[str]  # List of author names
     publication_year: Optional[int]
@@ -152,7 +152,7 @@ class Footnote(Document):
     """Footnote block with reference number and text."""
     kind: BlockKind
     paper: Link[Paper]
-    index: int
+    next_block: Optional[Link[Block]] = None
     text: str
     reference_number: int  # Footnote number in the document
 
@@ -169,7 +169,7 @@ class Quiz(Document):
     """Quiz block with multiple choice questions."""
     kind: BlockKind
     paper: Link[Paper]
-    index: int
+    next_block: Optional[Link[Block]] = None
     title: str
     questions: list[Question]
 
