@@ -109,7 +109,7 @@ export interface ApiQuizBlock extends ApiBaseBlock {
   kind: BlockKind.QUIZ;
   question: string;
   options: string[]; // List of answer options
-  correct_answer: string; // The correct answer from the options
+  correct_answer: number; // Index of the correct answer in the options array
   explanation?: string; // Explanation for the correct answer
 }
 
@@ -219,7 +219,7 @@ export interface QuizBlock extends BaseBlock {
   kind: BlockKind.QUIZ;
   question: string;
   options: string[]; // List of answer options
-  correct_answer: string; // The correct answer from the options
+  correct_answer: number; // Index of the correct answer in the options array
   explanation?: string; // Explanation for the correct answer
 }
 

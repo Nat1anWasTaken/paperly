@@ -390,7 +390,7 @@ def attention(query, key, value, mask=None):
                 "Recurrent connections",
                 "Pooling operations"
               ],
-              correct_answer: "Self-attention mechanism",
+              correct_answer: 1,
               explanation: "The Transformer architecture's key innovation is the self-attention mechanism, which allows the model to weigh the importance of different parts of the input sequence when processing each element.",
             } as QuizBlock,
             {
@@ -405,7 +405,7 @@ def attention(query, key, value, mask=None):
                 "Balanced Embedding Representation Technique",
                 "Basic Encoder for Robust Text-processing"
               ],
-              correct_answer: "Bidirectional Encoder Representations from Transformers",
+              correct_answer: 0,
               explanation: "BERT stands for Bidirectional Encoder Representations from Transformers, emphasizing its bidirectional nature and transformer-based architecture.",
             } as QuizBlock,
           ],

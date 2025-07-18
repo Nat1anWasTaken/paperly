@@ -16,6 +16,8 @@ export type AnalysisStatus =
   | 'generating_metadata'
   | 'metadata_generated'
   | 'processing_into_blocks'
+  | 'blocks_processed'
+  | 'generating_quizzes'
   | 'completed'
   | 'errored';
 
@@ -205,11 +207,13 @@ export async function uploadAndAnalyzePaper(
       
       const progressMap: Record<AnalysisStatus, number> = {
         created: 10,
-        extracting_markdown: 25,
-        markdown_extracted: 40,
-        generating_metadata: 55,
-        metadata_generated: 70,
-        processing_into_blocks: 85,
+        extracting_markdown: 20,
+        markdown_extracted: 35,
+        generating_metadata: 50,
+        metadata_generated: 65,
+        processing_into_blocks: 75,
+        blocks_processed: 85,
+        generating_quizzes: 95,
         completed: 100,
         errored: 0,
       };
@@ -252,6 +256,10 @@ function getStatusMessage(status: AnalysisStatus): string {
       return 'Document structure analyzed';
     case 'processing_into_blocks':
       return 'Processing content blocks...';
+    case 'blocks_processed':
+      return 'Content blocks processed';
+    case 'generating_quizzes':
+      return 'Generating interactive quizzes...';
     case 'completed':
       return 'Analysis completed successfully';
     case 'errored':

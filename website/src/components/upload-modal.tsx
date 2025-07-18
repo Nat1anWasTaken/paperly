@@ -56,11 +56,13 @@ export function UploadModal({ trigger }: UploadModalProps) {
         
         const progressMap: Record<AnalysisStatus, number> = {
           created: 10,
-          extracting_markdown: 25,
-          markdown_extracted: 40,
-          generating_metadata: 55,
-          metadata_generated: 70,
-          processing_into_blocks: 85,
+          extracting_markdown: 20,
+          markdown_extracted: 35,
+          generating_metadata: 50,
+          metadata_generated: 65,
+          processing_into_blocks: 75,
+          blocks_processed: 85,
+          generating_quizzes: 95,
           completed: 100,
           errored: 0,
         };
@@ -243,6 +245,8 @@ export function UploadModal({ trigger }: UploadModalProps) {
       generating_metadata: 'Generating metadata...',
       metadata_generated: 'Metadata generated...',
       processing_into_blocks: 'Processing blocks...',
+      blocks_processed: 'Blocks processed...',
+      generating_quizzes: 'Generating quizzes...',
       completed: 'Complete!',
       errored: 'Analysis failed',
     };

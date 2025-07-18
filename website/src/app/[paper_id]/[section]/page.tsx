@@ -5,7 +5,14 @@ import { MainLayout } from "@/components/layouts/main-layout";
 import { BlockRenderer } from "@/components/blocks";
 import { notFound } from "next/navigation";
 import { api } from "@/lib/api";
-import { Paper, PaperBlock, PaperData, PaperSection, BlockKind, FrontendPaper } from "@/data/types";
+import {
+  Paper,
+  PaperBlock,
+  PaperData,
+  PaperSection,
+  BlockKind,
+  FrontendPaper,
+} from "@/data/types";
 
 interface PaperSectionPageProps {
   params: Promise<{
@@ -25,7 +32,7 @@ function organizeBlocksIntoSections(blocks: PaperBlock[]): PaperSection[] {
       if (currentSection) {
         sections.push(currentSection);
       }
-      
+
       currentSection = {
         id: `section-${block.id}`,
         title: block.text,
@@ -56,7 +63,7 @@ function organizeBlocksIntoSections(blocks: PaperBlock[]): PaperSection[] {
 
 export default function PaperSectionPage({ params }: PaperSectionPageProps) {
   const { paper_id, section } = React.use(params);
-  
+
   const [paper, setPaper] = React.useState<Paper | null>(null);
   const [blocks, setBlocks] = React.useState<PaperBlock[]>([]);
   const [sections, setSections] = React.useState<PaperSection[]>([]);
@@ -72,19 +79,18 @@ export default function PaperSectionPage({ params }: PaperSectionPageProps) {
         // Fetch paper info and blocks in parallel
         const [paperData, blocksData] = await Promise.all([
           api.getPaper(paper_id),
-          api.getPaperBlocksForUI(paper_id)
+          api.getPaperBlocksForUI(paper_id),
         ]);
 
         setPaper(paperData);
         setBlocks(blocksData);
-        
+
         // Organize blocks into sections
         const organizedSections = organizeBlocksIntoSections(blocksData);
         setSections(organizedSections);
-        
       } catch (err) {
-        console.error('Failed to fetch paper data:', err);
-        setError(err instanceof Error ? err.message : 'Failed to load paper');
+        console.error("Failed to fetch paper data:", err);
+        setError(err instanceof Error ? err.message : "Failed to load paper");
       } finally {
         setLoading(false);
       }
@@ -108,10 +114,12 @@ export default function PaperSectionPage({ params }: PaperSectionPageProps) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4 text-destructive">Error Loading Paper</h1>
+          <h1 className="text-2xl font-bold mb-4 text-destructive">
+            Error Loading Paper
+          </h1>
           <p className="text-muted-foreground mb-4">{error}</p>
-          <button 
-            onClick={() => window.location.reload()} 
+          <button
+            onClick={() => window.location.reload()}
             className="px-4 py-2 bg-primary text-primary-foreground rounded hover:bg-primary/90"
           >
             Try Again
@@ -145,7 +153,7 @@ export default function PaperSectionPage({ params }: PaperSectionPageProps) {
       {
         pageNumber: 1,
         sections: sections,
-      }
+      },
     ],
   };
 
@@ -153,7 +161,6 @@ export default function PaperSectionPage({ params }: PaperSectionPageProps) {
     <MainLayout paperData={paperData} currentSectionId={section}>
       <article className="space-y-8">
         <div key={currentSection.id} id={currentSection.id} className="section">
-          <h2 className="text-2xl font-bold mb-4">{currentSection.title}</h2>
           <div className="space-y-6">
             {currentSection.blocks.map((block) => (
               <BlockRenderer key={block.id} block={block} />

@@ -18,7 +18,11 @@ export function QuizBlockComponent({ block }: QuizBlockProps) {
     setShowResult(true);
   };
 
-  const isCorrect = selectedAnswer === block.correct_answer;
+  // Get the correct answer index (now directly a number)
+  const correctAnswerIndex = block.correct_answer;
+  const correctAnswerText = block.options[correctAnswerIndex] || block.options[0];
+  const selectedIndex = selectedAnswer ? parseInt(selectedAnswer) : -1;
+  const isCorrect = selectedIndex === correctAnswerIndex;
 
   return (
     <div className="my-4 p-4 border rounded-lg bg-accent/50">
@@ -38,24 +42,24 @@ export function QuizBlockComponent({ block }: QuizBlockProps) {
             key={index}
             className={`flex items-center space-x-2 p-3 rounded-lg border transition-colors ${
               showResult
-                ? option === block.correct_answer
+                ? index === correctAnswerIndex
                   ? "bg-success/10 border-success text-success-foreground"
-                  : option === selectedAnswer && !isCorrect
+                  : index === selectedIndex && !isCorrect
                   ? "bg-error/10 border-error text-error-foreground"
                   : "bg-card border-border"
-                : selectedAnswer === option
+                : selectedAnswer === index.toString()
                 ? "bg-primary/10 border-primary"
                 : "bg-card border-border hover:bg-muted"
             }`}
           >
-            <RadioGroupItem value={option} id={`quiz-${block.id}-${index}`} />
+            <RadioGroupItem value={index.toString()} id={`quiz-${block.id}-${index}`} />
             <Label
               htmlFor={`quiz-${block.id}-${index}`}
               className="flex-1 cursor-pointer text-foreground leading-7"
             >
               {option}
             </Label>
-            {showResult && option === block.correct_answer && (
+            {showResult && index === correctAnswerIndex && (
               <span className="text-success font-semibold">✓</span>
             )}
           </div>
@@ -82,7 +86,7 @@ export function QuizBlockComponent({ block }: QuizBlockProps) {
             <strong>
               {isCorrect
                 ? "Correct!"
-                : "Incorrect. The correct answer is: " + block.correct_answer}
+                : "Incorrect. The correct answer is: " + correctAnswerText}
             </strong>
           </div>
           {block.explanation && (
