@@ -1,5 +1,6 @@
 import os
 
+from beanie import init_beanie
 from dotenv import load_dotenv
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 
@@ -49,6 +50,12 @@ class Database:
             logger.info("Disconnected from MongoDB")
         else:
             logger.warning("No MongoDB connection to close")
+
+    async def initialize_beanie(self):
+        if not self.database:
+            raise RuntimeError("Database connection is not established.")
+
+        await init_beanie(self.database)
 
 
 def get_database_instance():
