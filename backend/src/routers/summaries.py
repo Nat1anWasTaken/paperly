@@ -6,12 +6,13 @@ from beanie import PydanticObjectId
 
 from src.models.block import Block, BlockMixin
 from src.openai import client, model
+from src.utils.object_id import validate_object_id_or_raise_http_exception
 
 router = APIRouter(prefix="/summaries")
 
 
 class SummaryRequest(BaseModel):
-    block_ids: List[PydanticObjectId]
+    block_ids: List[str]
 
 
 async def generate_summary_stream(blocks_content: str):
@@ -114,9 +115,14 @@ async def create_summary(request: SummaryRequest):
     :return: StreamingResponse with the generated summary.
     :raises HTTPException: If blocks are not found or an error occurs during processing.
     """
+    block_ids: List[PydanticObjectId] = []
+
+    for block_id in request.block_ids:
+        block_ids.append(validate_object_id_or_raise_http_exception(block_id))
+
     try:
         # Fetch all blocks from the database
-        blocks = await Block.find({"_id": {"$in": request.block_ids}}).to_list()
+        blocks = await Block.find({"_id": {"$in": block_ids}}).to_list()
         
         if not blocks:
             raise HTTPException(status_code=404, detail="No blocks found with the provided IDs")
