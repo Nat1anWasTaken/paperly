@@ -1,10 +1,11 @@
 "use client";
 
 import * as React from "react";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { usePrefetchPaper } from "@/hooks/use-papers";
+import Link from "next/link";
 
 interface PaperSection {
   id: string;
@@ -32,9 +33,21 @@ export function PaperNavigation({
     <div className="h-full overflow-y-auto bg-card">
       <div className="p-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-card-foreground">
-            Contents
-          </h2>
+          <div className="flex items-center gap-2">
+            <Link href="/">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="p-1"
+                title="Go to home"
+              >
+                <Home className="size-4" />
+              </Button>
+            </Link>
+            <h2 className="text-lg font-semibold text-card-foreground">
+              Contents
+            </h2>
+          </div>
           <Button
             variant="ghost"
             size="sm"
