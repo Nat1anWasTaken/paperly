@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Optional
+from typing import Optional, Union
 
 from beanie import Document, Link
 
@@ -93,3 +93,6 @@ class Quiz(Block):
     options: list[str]  # List of answer options
     correct_answer: str  # The correct answer from the options
     explanation: Optional[str] = None  # Explanation for the correct answer
+
+
+BlockMixin = Union[Paragraph, Header, Figure, Table, Equation, CodeBlock, Quote, Callout, Reference, Footnote, Quiz]
