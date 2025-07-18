@@ -5,12 +5,15 @@ from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
+from src.logging import get_logger
 from src.models.block import Block
 from src.models.translation import LanguageCode
 from src.openai import client, model
+from src.utils.blocks import get_typed_blocks
 from src.utils.object_id import validate_object_id_or_raise_http_exception
 
 router = APIRouter(prefix="/summaries")
+logger = get_logger(__name__)
 
 
 class SummaryRequest(BaseModel):
@@ -140,8 +143,8 @@ async def create_summary(request: SummaryRequest):
         block_ids.append(validate_object_id_or_raise_http_exception(block_id))
 
     try:
-        # Fetch all blocks from the database
-        blocks = await Block.find({"_id": {"$in": block_ids}}).to_list()
+        # Fetch all blocks from the database with proper typing
+        blocks = await get_typed_blocks(block_ids)
 
         if not blocks:
             raise HTTPException(

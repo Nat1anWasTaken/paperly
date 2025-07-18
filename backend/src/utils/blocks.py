@@ -435,3 +435,53 @@ async def get_typed_block(block_id: PydanticObjectId) -> Optional[Block]:
         logger.warning(f"Failed to parse block {block_id}: {e}")
         # Fall back to base Block
         return Block.model_validate(doc)
+
+
+async def get_typed_blocks(block_ids: List[PydanticObjectId]) -> List[Block]:
+    """
+    Retrieve multiple blocks by their IDs and return them as correctly typed block instances.
+    
+    :param block_ids: List of block IDs to retrieve.
+    :return: List of typed block instances.
+    :rtype: List[Block]
+    """
+    # Get documents from the database
+    docs = await Block.get_motor_collection().find({"_id": {"$in": block_ids}}).to_list(length=None)
+    
+    if not docs:
+        return []
+    
+    # Map block kinds to their classes
+    block_class_map = {
+        BlockKind.HEADER: Header,
+        BlockKind.PARAGRAPH: Paragraph,
+        BlockKind.FIGURE: Figure,
+        BlockKind.TABLE: Table,
+        BlockKind.EQUATION: Equation,
+        BlockKind.CODE_BLOCK: CodeBlock,
+        BlockKind.QUOTE: Quote,
+        BlockKind.CALLOUT: Callout,
+        BlockKind.REFERENCE: Reference,
+        BlockKind.FOOTNOTE: Footnote,
+        BlockKind.QUIZ: Quiz,
+    }
+    
+    typed_blocks = []
+    for doc in docs:
+        # Get the appropriate class for this block kind
+        kind = BlockKind(doc["kind"])
+        block_class = block_class_map.get(kind, Block)
+        
+        try:
+            # Add id field for easier access
+            doc["id"] = doc["_id"]
+            # Create typed block instance from document
+            typed_block = block_class.model_validate(doc)
+            typed_blocks.append(typed_block)
+        except Exception as e:
+            logger.warning(f"Failed to parse block {doc.get('_id')}: {e}")
+            # Fall back to base Block
+            base_block = Block.model_validate(doc)
+            typed_blocks.append(base_block)
+    
+    return typed_blocks
