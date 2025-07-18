@@ -1,11 +1,11 @@
 import asyncio
 from io import BytesIO
 
+from PIL import Image
 from beanie import WriteRules
 from marker.converters.pdf import PdfConverter
 from marker.models import create_model_dict
 from marker.output import text_from_rendered
-from PIL import Image
 
 from src.logging import get_logger
 from src.models.analysis import Analysis, AnalysisStatus
@@ -146,5 +146,4 @@ class MarkdownExtractionWorker(BaseWorker):
             analysis.status = AnalysisStatus.ERRORED
             analysis.error_message = str(e)
             await analysis.save(link_rule=WriteRules.WRITE)
-            raise
             raise
