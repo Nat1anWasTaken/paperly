@@ -255,6 +255,8 @@ Focus on testing comprehension of main concepts, methodology, and key findings r
             max_tokens=2000,
             response_format=self.response_format
         )
+
+        logger.info(response)
         
         return response.choices[0].message.parsed
 

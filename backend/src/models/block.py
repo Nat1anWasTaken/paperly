@@ -91,7 +91,7 @@ class Footnote(Block):
 class Quiz(Block):
     question: str
     options: list[str]  # List of answer options
-    correct_answer: str  # The correct answer from the options
+    correct_answer: int  # The correct answer from the options
     explanation: Optional[str] = None  # Explanation for the correct answer
 
 
