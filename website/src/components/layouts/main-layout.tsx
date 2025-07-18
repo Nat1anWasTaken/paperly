@@ -9,47 +9,50 @@ import {
 import { PaperNavigation } from "./paper-navigation";
 import { PaperHeader } from "./paper-header";
 import { AiChat } from "./ai-chat";
-
-interface PaperSection {
-  id: string;
-  title: string;
-  level: number; // 1 for main sections, 2 for subsections, etc.
-}
+import { PaperNavigationFooter } from "./paper-navigation-footer";
+import { PaperData, PaperSection } from "@/data/types";
+import { samplePaper } from "@/data/sample-paper";
 
 interface MainLayoutProps {
   children: React.ReactNode;
-  paperTitle?: string;
-  paperSections?: PaperSection[];
+  paperData?: PaperData;
+  currentSectionId?: string;
 }
 
 export function MainLayout({
   children,
-  paperTitle = "Sample Research Paper",
-  paperSections = [
-    { id: "introduction", title: "Introduction", level: 1 },
-    { id: "related-work", title: "Related Work", level: 1 },
-    { id: "method", title: "Method", level: 1 },
-    { id: "experiments", title: "Experiments", level: 1 },
-    { id: "experimental-setup", title: "Experimental Setup", level: 2 },
-    { id: "results", title: "Results", level: 2 },
-    { id: "discussion", title: "Discussion", level: 1 },
-    { id: "conclusion", title: "Conclusion", level: 1 },
-  ],
+  paperData = samplePaper,
+  currentSectionId = "",
 }: MainLayoutProps) {
-  const [activeSectionId, setActiveSectionId] = React.useState<string>("");
+  const [activeSectionId, setActiveSectionId] = React.useState<string>(currentSectionId);
+  const [currentPage, setCurrentPage] = React.useState<number>(1);
   const [isSidebarCollapsed, setIsSidebarCollapsed] =
     React.useState<boolean>(false);
 
+  // Get ALL sections from the entire paper for navigation
+  const paperSections: PaperSection[] = paperData.pages.flatMap(page => page.sections);
+
   const scrollToSection = (sectionId: string) => {
-    const element = document.getElementById(sectionId);
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth" });
-      setActiveSectionId(sectionId);
-    }
+    // For URL-based navigation, we'll navigate to the section route
+    setActiveSectionId(sectionId);
+    
+    // Navigate to the section route
+    window.location.href = `/${paperData.paper.id}/${sectionId}`;
   };
 
   const toggleSidebar = () => {
     setIsSidebarCollapsed(!isSidebarCollapsed);
+  };
+
+  // Calculate current section index for navigation
+  const currentSectionIndex = paperSections.findIndex(section => section.id === (currentSectionId || activeSectionId));
+  
+  const handleSectionNavigation = (direction: 'prev' | 'next') => {
+    const newIndex = direction === 'prev' ? currentSectionIndex - 1 : currentSectionIndex + 1;
+    if (newIndex >= 0 && newIndex < paperSections.length) {
+      const newSectionId = paperSections[newIndex].id;
+      scrollToSection(newSectionId);
+    }
   };
 
   return (
@@ -67,9 +70,10 @@ export function MainLayout({
               >
                 <PaperNavigation
                   paperSections={paperSections}
-                  activeSectionId={activeSectionId}
+                  activeSectionId={currentSectionId || activeSectionId}
                   onSectionClick={scrollToSection}
                   onToggleSidebar={toggleSidebar}
+                  paperId={paperData.paper.id}
                 />
               </ResizablePanel>
 
@@ -84,12 +88,14 @@ export function MainLayout({
           >
             <main className="h-full overflow-y-auto">
               <PaperHeader
-                paperTitle={paperTitle}
+                paperTitle={paperData.paper.title}
                 onToggleSidebar={toggleSidebar}
               />
 
               <div className="max-w-4xl mx-auto px-8 pb-8">
-                <div className="paper-content">{children}</div>
+                <div className="paper-content">
+                  {children}
+                </div>
               </div>
             </main>
           </ResizablePanel>
@@ -106,6 +112,14 @@ export function MainLayout({
             <AiChat />
           </ResizablePanel>
         </ResizablePanelGroup>
+        
+        {/* Bottom Navigation Footer */}
+        <PaperNavigationFooter
+          currentSectionIndex={currentSectionIndex}
+          totalSections={paperSections.length}
+          currentSectionTitle={paperSections[currentSectionIndex]?.title || ""}
+          onSectionNavigation={handleSectionNavigation}
+        />
       </div>
     </div>
   );

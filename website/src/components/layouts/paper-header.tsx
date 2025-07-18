@@ -12,7 +12,7 @@ interface PaperHeaderProps {
 
 export function PaperHeader({ paperTitle, onToggleSidebar }: PaperHeaderProps) {
   return (
-    <header className="sticky top-2 z-10 mx-4 mt-2 mb-3 flex items-center justify-between bg-background/20 backdrop-blur-2xl supports-[backdrop-filter]:bg-background/10 px-4 py-2.5 border border-white/20 shadow-lg rounded-lg">
+    <header className="sticky top-2 z-10 mx-4 mt-2 mb-3 flex items-center justify-between bg-background/20 backdrop-blur-2xl supports-[backdrop-filter]:bg-background/10 px-4 py-2.5 border border-border shadow-lg rounded-lg">
       <div className="flex items-center gap-3">
         <Button
           variant="ghost"
@@ -27,7 +27,8 @@ export function PaperHeader({ paperTitle, onToggleSidebar }: PaperHeaderProps) {
           {paperTitle}
         </span>
       </div>
+
       <ThemeToggle />
     </header>
   );
-} 
+}

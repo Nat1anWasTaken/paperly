@@ -16,6 +16,7 @@ interface PaperNavigationProps {
   activeSectionId: string;
   onSectionClick: (sectionId: string) => void;
   onToggleSidebar: () => void;
+  paperId: string;
 }
 
 export function PaperNavigation({
@@ -23,6 +24,7 @@ export function PaperNavigation({
   activeSectionId,
   onSectionClick,
   onToggleSidebar,
+  paperId,
 }: PaperNavigationProps) {
   return (
     <div className="h-full overflow-y-auto bg-card">
