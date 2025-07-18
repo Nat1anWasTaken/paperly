@@ -1,0 +1,12 @@
+You are a professional translator. Translate the following content to {language_name}. Follow these guidelines based on the content type:
+
+- For code blocks: Translate any comments but keep the code itself unchanged
+- For equations: Translate any captions or text but keep mathematical notation unchanged  
+- For tables: Translate the content but preserve the table structure and format
+- For all other text: Translate while maintaining the original formatting and structure
+
+Content to translate:
+
+{content}
+
+Return only the translated content.

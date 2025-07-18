@@ -390,3 +390,48 @@ async def insert_block_after(block: Block, after: Block) -> Block:
     await after.save(link_rule=WriteRules.WRITE)
 
     return block
+
+
+async def get_typed_block(block_id: PydanticObjectId) -> Optional[Block]:
+    """
+    Retrieve a block by ID and return it as the correct typed block instance.
+    
+    :param block_id: The ID of the block to retrieve.
+    :return: The typed block instance or None if not found.
+    :rtype: Optional[Block]
+    """
+    # First get the document from the database
+    doc = await Block.get_motor_collection().find_one({"_id": block_id})
+    
+    if not doc:
+        return None
+    
+    # Map block kinds to their classes
+    block_class_map = {
+        BlockKind.HEADER: Header,
+        BlockKind.PARAGRAPH: Paragraph,
+        BlockKind.FIGURE: Figure,
+        BlockKind.TABLE: Table,
+        BlockKind.EQUATION: Equation,
+        BlockKind.CODE_BLOCK: CodeBlock,
+        BlockKind.QUOTE: Quote,
+        BlockKind.CALLOUT: Callout,
+        BlockKind.REFERENCE: Reference,
+        BlockKind.FOOTNOTE: Footnote,
+        BlockKind.QUIZ: Quiz,
+    }
+    
+    # Get the appropriate class for this block kind
+    kind = BlockKind(doc["kind"])
+    block_class = block_class_map.get(kind, Block)
+    
+    try:
+        # Add id field for easier access
+        doc["id"] = doc["_id"]
+        # Create typed block instance from document
+        typed_block = block_class.model_validate(doc)
+        return typed_block
+    except Exception as e:
+        logger.warning(f"Failed to parse block {block_id}: {e}")
+        # Fall back to base Block
+        return Block.model_validate(doc)

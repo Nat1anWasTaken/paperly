@@ -7,22 +7,13 @@ from src.logging import get_logger
 from src.models.block import Block
 from src.models.translation import Translation, LanguageCode
 from src.utils.object_id import validate_object_id_or_raise_http_exception
-from src.utils.translation import translation_service
+from src.utils.translation import translate_block
+from src.utils.blocks import get_typed_block
 
 logger = get_logger(__name__)
 
 router = APIRouter(prefix="/translations")
 
-
-class TranslationRequest(BaseModel):
-    """
-    Request model for block translation.
-    
-    :param block_id: ID of the block to translate.
-    :param target_language: Target language code for translation.
-    """
-    block_id: str
-    target_language: LanguageCode
 
 
 class TranslationResponse(BaseModel):
@@ -50,42 +41,14 @@ class TranslationResponse(BaseModel):
         """
         return cls(
             id=str(translation.id),
-            block_id=str(translation.block.id),
+            block_id=str(translation.block.ref.id),
             content=translation.content,
             language=translation.language
         )
 
 
-@router.post("/translate", response_model=TranslationResponse)
-async def translate_block(request: TranslationRequest):
-    """
-    Translate a block's content to the specified target language.
-    
-    Figures cannot be translated and will return an error.
-    
-    :param request: Translation request containing block ID and target language.
-    :return: The translation result.
-    :rtype: TranslationResponse
-    :raises HTTPException: If block is not found, is a figure, or translation fails.
-    """
-    validate_object_id_or_raise_http_exception(request.block_id)
 
-    # Find the block
-    block = await Block.get(request.block_id)
-    if not block:
-        raise HTTPException(status_code=404, detail="Block not found")
-
-    try:
-        translation = await translation_service.translate_block(block, request.target_language)
-        return TranslationResponse.from_translation(translation)
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
-        logger.error(f"Translation failed for block {request.block_id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Translation failed")
-
-
-@router.get("/block/{block_id}", response_model=List[TranslationResponse])
+@router.get("/blocks/{block_id}", response_model=List[TranslationResponse])
 async def get_block_translations(block_id: str):
     """
     Get all translations for a specific block.
@@ -95,10 +58,10 @@ async def get_block_translations(block_id: str):
     :rtype: List[TranslationResponse]
     :raises HTTPException: If block is not found.
     """
-    validate_object_id_or_raise_http_exception(block_id)
+    object_id = validate_object_id_or_raise_http_exception(block_id)
 
-    # Verify block exists
-    block = await Block.get(block_id)
+    # Get the typed block with full information
+    block = await get_typed_block(object_id)
     if not block:
         raise HTTPException(status_code=404, detail="Block not found")
 
@@ -108,21 +71,22 @@ async def get_block_translations(block_id: str):
     return [TranslationResponse.from_translation(t) for t in translations]
 
 
-@router.get("/block/{block_id}/language/{language}", response_model=TranslationResponse)
+@router.get("/blocks/{block_id}/language/{language}", response_model=TranslationResponse)
 async def get_block_translation(block_id: str, language: LanguageCode):
     """
     Get a specific translation for a block in the given language.
+    If the translation doesn't exist, it will be created automatically.
     
     :param block_id: ID of the block to get translation for.
     :param language: Language code of the desired translation.
     :return: The translation for the block in the specified language.
     :rtype: TranslationResponse
-    :raises HTTPException: If block or translation is not found.
+    :raises HTTPException: If block is not found or translation fails.
     """
-    validate_object_id_or_raise_http_exception(block_id)
+    object_id = validate_object_id_or_raise_http_exception(block_id)
 
-    # Verify block exists
-    block = await Block.get(block_id)
+    # Get the typed block with full information
+    block = await get_typed_block(object_id)
     if not block:
         raise HTTPException(status_code=404, detail="Block not found")
 
@@ -132,16 +96,20 @@ async def get_block_translation(block_id: str, language: LanguageCode):
         Translation.language == language
     )
 
+    # If translation doesn't exist, create it
     if not translation:
-        raise HTTPException(
-            status_code=404,
-            detail=f"Translation not found for block {block_id} in language {language.value}"
-        )
+        try:
+            translation = await translate_block(block, language)
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=str(e))
+        except Exception as e:
+            logger.error(f"Translation failed for block {block_id}: {str(e)}")
+            raise HTTPException(status_code=500, detail="Translation failed")
 
     return TranslationResponse.from_translation(translation)
 
 
-@router.delete("/block/{block_id}/language/{language}")
+@router.delete("/blocks/{block_id}/language/{language}")
 async def delete_block_translation(block_id: str, language: LanguageCode):
     """
     Delete a specific translation for a block in the given language.
@@ -152,10 +120,10 @@ async def delete_block_translation(block_id: str, language: LanguageCode):
     :rtype: dict
     :raises HTTPException: If block or translation is not found.
     """
-    validate_object_id_or_raise_http_exception(block_id)
+    object_id = validate_object_id_or_raise_http_exception(block_id)
 
-    # Verify block exists
-    block = await Block.get(block_id)
+    # Get the typed block with full information
+    block = await get_typed_block(object_id)
     if not block:
         raise HTTPException(status_code=404, detail="Block not found")
 
@@ -177,7 +145,7 @@ async def delete_block_translation(block_id: str, language: LanguageCode):
     return {"message": "Translation deleted successfully"}
 
 
-@router.get("/languages", response_model=List[dict])
+@router.get("/languages", response_model=List[str])
 async def get_supported_languages():
     """
     Get all supported language codes for translation.
@@ -185,13 +153,6 @@ async def get_supported_languages():
     :return: List of supported language codes with their names.
     :rtype: List[dict]
     """
-    languages = []
-    for lang_code in LanguageCode:
-        # Extract language name from enum (remove underscores and capitalize)
-        name = lang_code.name.replace('_', ' ').title()
-        languages.append({
-            "code": lang_code.value,
-            "name": name
-        })
+    languages = [lang_code for lang_code in LanguageCode]
 
-    return sorted(languages, key=lambda x: x["name"])
+    return languages
