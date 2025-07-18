@@ -230,7 +230,6 @@ async def get_blocks_in_order(paper_id: PydanticObjectId) -> List[Block]:
     :return: List of block objects.
     :rtype: List[Block]
     """
-    # Use aggregation to get all fields and convert to proper types
     pipeline = [
         {"$match": {"paper.$id": paper_id}},
         {"$addFields": {"id": "$_id"}}  # Add id field for easier access
