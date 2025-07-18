@@ -22,6 +22,7 @@ class Analysis(Document):
     file_key: str
     paper: Optional[Link[Paper]] = None
     processed_markdown: Optional[str] = None
+    error_message: Optional[str] = None
 
     class Settings:
         name = "analyses"
