@@ -11,17 +11,16 @@ import { PaperHeader } from "./paper-header";
 import { AiChat } from "./ai-chat";
 import { PaperNavigationFooter } from "./paper-navigation-footer";
 import { PaperData, PaperSection } from "@/data/types";
-import { samplePaper } from "@/data/sample-paper";
 
 interface MainLayoutProps {
   children: React.ReactNode;
-  paperData?: PaperData;
+  paperData: PaperData;
   currentSectionId?: string;
 }
 
 export function MainLayout({
   children,
-  paperData = samplePaper,
+  paperData,
   currentSectionId = "",
 }: MainLayoutProps) {
   const [activeSectionId, setActiveSectionId] = React.useState<string>(currentSectionId);

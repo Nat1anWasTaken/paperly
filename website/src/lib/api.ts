@@ -1,4 +1,6 @@
 // API configuration and utilities for Paperly backend
+import { Paper, PaperBlocksResponse, ApiPaperBlock, convertApiBlockToFrontendBlock, PaperBlock } from '@/data/types';
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
 
 // Types based on OpenAPI schema
@@ -6,6 +8,16 @@ export interface FileUploadResponse {
   upload_url: string;
   key: string;
 }
+
+export type AnalysisStatus = 
+  | 'created'
+  | 'extracting_markdown'
+  | 'markdown_extracted' 
+  | 'generating_metadata'
+  | 'metadata_generated'
+  | 'processing_into_blocks'
+  | 'completed'
+  | 'errored';
 
 export interface CreateAnalysisRequest {
   file_key: string;
@@ -24,27 +36,6 @@ export interface GetAnalysisResponse {
   paper_id?: string;
 }
 
-export type AnalysisStatus = 
-  | "created"
-  | "extracting_markdown"
-  | "markdown_extracted"
-  | "generating_metadata"
-  | "metadata_generated"
-  | "processing_into_blocks"
-  | "completed"
-  | "errored";
-
-export interface Paper {
-  _id?: string;
-  title: string;
-  created_at?: string;
-}
-
-export interface PaperBlocksResponse {
-  blocks: Array<any>; // Block types from the API
-}
-
-// API utility class
 export class PaperlyAPI {
   private baseUrl: string;
 
@@ -53,7 +44,7 @@ export class PaperlyAPI {
   }
 
   /**
-   * Get a presigned URL for file upload
+   * Get pre-signed upload URL
    */
   async getUploadUrl(): Promise<FileUploadResponse> {
     const response = await fetch(`${this.baseUrl}/papers/upload_url`);
@@ -64,7 +55,7 @@ export class PaperlyAPI {
   }
 
   /**
-   * Upload file to presigned URL using PUT method
+   * Upload file to pre-signed URL
    */
   async uploadFile(uploadUrl: string, file: File): Promise<void> {
     const response = await fetch(uploadUrl, {
@@ -74,14 +65,14 @@ export class PaperlyAPI {
         'Content-Type': file.type,
       },
     });
-
+    
     if (!response.ok) {
-      throw new Error(`File upload failed: ${response.statusText}`);
+      throw new Error(`Failed to upload file: ${response.statusText}`);
     }
   }
 
   /**
-   * Create an analysis task
+   * Create analysis task
    */
   async createAnalysis(fileKey: string): Promise<CreateAnalysisResponse> {
     const response = await fetch(`${this.baseUrl}/analyses/`, {
@@ -91,11 +82,10 @@ export class PaperlyAPI {
       },
       body: JSON.stringify({ file_key: fileKey }),
     });
-
+    
     if (!response.ok) {
       throw new Error(`Failed to create analysis: ${response.statusText}`);
     }
-
     return response.json();
   }
 
@@ -136,15 +126,45 @@ export class PaperlyAPI {
    * Get paper blocks
    */
   async getPaperBlocks(paperId: string): Promise<PaperBlocksResponse> {
-    const response = await fetch(`${this.baseUrl}/papers/${paperId}/blocks`);
+    const url = `${this.baseUrl}/papers/${paperId}/blocks`;
+    console.log('API: Fetching from URL:', url);
+    
+    const response = await fetch(url);
+    
+    console.log('API: Response status:', response.status);
+    console.log('API: Response ok:', response.ok);
+    
     if (!response.ok) {
-      throw new Error(`Failed to get paper blocks: ${response.statusText}`);
+      const errorText = await response.text();
+      console.log('API: Error response:', errorText);
+      throw new Error(`Failed to get paper blocks: ${response.status} ${response.statusText}`);
     }
-    return response.json();
+    
+    const data = await response.json();
+    console.log('API: Response data:', data);
+    return data;
+  }
+
+  /**
+   * Get paper blocks converted to frontend format
+   */
+  async getPaperBlocksForUI(paperId: string): Promise<PaperBlock[]> {
+    console.log('API: Getting blocks for paper', paperId);
+    console.log('API: Base URL:', this.baseUrl);
+    
+    const response = await this.getPaperBlocks(paperId);
+    console.log('API: Raw response:', response);
+    
+    const convertedBlocks = response.blocks.map((apiBlock, index) => 
+      convertApiBlockToFrontendBlock(apiBlock, index)
+    );
+    
+    console.log('API: Converted blocks:', convertedBlocks.length);
+    return convertedBlocks;
   }
 }
 
-// Export singleton instance
+// Default API instance
 export const api = new PaperlyAPI();
 
 // Utility function for uploading and analyzing a paper
@@ -219,16 +239,24 @@ export async function uploadAndAnalyzePaper(
 }
 
 function getStatusMessage(status: AnalysisStatus): string {
-  const messages: Record<AnalysisStatus, string> = {
-    created: 'Analysis task created...',
-    extracting_markdown: 'Extracting text from PDF...',
-    markdown_extracted: 'Text extraction complete',
-    generating_metadata: 'Generating paper metadata...',
-    metadata_generated: 'Metadata generated',
-    processing_into_blocks: 'Processing content blocks...',
-    completed: 'Analysis complete!',
-    errored: 'Analysis failed',
-  };
-  
-  return messages[status] || 'Processing...';
+  switch (status) {
+    case 'created':
+      return 'Analysis task created';
+    case 'extracting_markdown':
+      return 'Extracting content from PDF...';
+    case 'markdown_extracted':
+      return 'Content extracted successfully';
+    case 'generating_metadata':
+      return 'Analyzing document structure...';
+    case 'metadata_generated':
+      return 'Document structure analyzed';
+    case 'processing_into_blocks':
+      return 'Processing content blocks...';
+    case 'completed':
+      return 'Analysis completed successfully';
+    case 'errored':
+      return 'Analysis failed';
+    default:
+      return 'Processing...';
+  }
 } 
