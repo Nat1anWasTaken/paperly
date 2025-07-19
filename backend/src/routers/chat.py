@@ -6,7 +6,6 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 from src.models.paper import Paper
-from src.models.translation import LanguageCode
 from src.openai import client, model
 from src.routers.summaries import format_block_content
 from src.utils.blocks import get_blocks_in_order
@@ -23,18 +22,15 @@ class ChatMessage(BaseModel):
 class ChatRequest(BaseModel):
     message: str
     history: Optional[List[ChatMessage]] = []
-    language: Optional[LanguageCode] = "en"
 
 
-async def generate_chat_stream(paper_content: str, message: str, history: List[ChatMessage],
-                               language: LanguageCode = "en"):
+async def generate_chat_stream(paper_content: str, message: str, history: List[ChatMessage]):
     """
     Generate a streaming chat response using OpenAI client with paper context.
 
     :param paper_content: The formatted content of all paper blocks.
     :param message: The user's current message.
     :param history: Previous conversation history.
-    :param language: The language code for the chat response (e.g., 'zh_traditional', 'en').
     :yields: Streaming response chunks in Server-Sent Events format.
     """
     # Read the prompt template
@@ -52,7 +48,7 @@ async def generate_chat_stream(paper_content: str, message: str, history: List[C
 
     # Format the system prompt with paper content
     try:
-        system_prompt = prompt_template.format(paper_content=paper_content, language=language)
+        system_prompt = prompt_template.format(paper_content=paper_content)
     except KeyError as e:
         yield f"event: error\ndata: Template formatting error - missing parameter: {e}\n\n"
         return
@@ -137,7 +133,7 @@ async def chat_with_paper(paper_id: str, request: ChatRequest):
 
         # Return streaming response
         return StreamingResponse(
-            generate_chat_stream(paper_content, request.message, request.history, request.language or "en"),
+            generate_chat_stream(paper_content, request.message, request.history or []),
             media_type="text/event-stream",
             headers={
                 "Cache-Control": "no-cache",
