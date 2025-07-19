@@ -9,6 +9,8 @@ import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { uploadAndAnalyzePaper, UploadProgress, AnalysisStatus, api } from "@/lib/api";
 import { AnalysisStorage, StoredAnalysis } from "@/lib/storage";
+import { Toaster } from "./ui/sonner";
+import { toast } from "sonner";
 
 interface UploadModalProps {
   trigger?: React.ReactNode;
@@ -200,8 +202,8 @@ export function UploadModal({ trigger }: UploadModalProps) {
   };
 
   const copyAnalysisId = (analysisId: string) => {
+    toast.info(`Copied analysis ID ${analysisId} to clipboard.`);
     navigator.clipboard.writeText(analysisId);
-    // You could add a toast notification here
   };
 
   const getStatusIcon = (analysis: StoredAnalysis) => {
@@ -318,7 +320,7 @@ export function UploadModal({ trigger }: UploadModalProps) {
                         {analysis.analysisId && (
                           <div className="flex items-center gap-2 mt-1">
                             <span className="text-xs text-muted-foreground font-mono">ID: {analysis.analysisId.slice(0, 8)}...</span>
-                            <Button variant="ghost" size="icon" className="h-4 w-4 p-0" onClick={() => copyAnalysisId(analysis.analysisId)} title="Copy full analysis ID">
+                            <Button variant="ghost" size="icon" className="h-4 w-4 p-0 cursor-pointer" onClick={() => copyAnalysisId(analysis.analysisId)} title="Copy full analysis ID">
                               <Copy className="w-3 h-3" />
                             </Button>
                           </div>
