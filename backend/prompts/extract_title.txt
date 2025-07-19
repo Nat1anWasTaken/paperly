@@ -1,0 +1,12 @@
+Based on the following academic paper markdown content, extract and return only the most appropriate title for this paper.
+
+The title should be:
+- Clear and descriptive of the paper's main topic
+- Professional and academic in tone
+- Concise but informative
+- Based on the paper's actual content, not just the first heading
+
+Paper markdown content:
+{markdown_content}
+
+Return only the title text, nothing else.

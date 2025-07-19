@@ -1,18 +1,72 @@
+import asyncio
 import re
+from pathlib import Path
 
 from beanie import WriteRules
 
 from src.logging import get_logger
 from src.models.analysis import Analysis, AnalysisStatus
 from src.models.paper import Paper
+from src.openai import client, model
 from src.worker.base import BaseWorker
 
 logger = get_logger(__name__)
 
 
-def extract_first_biggest_heading(markdown_content: str) -> str:
+async def extract_title_with_ai(markdown_content: str) -> str:
     """
-    Extract the first, biggest heading from markdown content.
+    Extract paper title using GPT-4o by analyzing the entire markdown content.
+
+    Uses AI to intelligently determine the most appropriate title based on the
+    paper's content rather than just taking the first heading.
+    
+    :param markdown_content: The markdown content to analyze.
+    :return: The extracted title from AI analysis.
+    :rtype: str
+    """
+    if not markdown_content or not markdown_content.strip():
+        return "Untitled Paper"
+
+    try:
+        # Load prompt template
+        prompt_path = Path(__file__).parent.parent.parent / "prompts" / "extract_title.txt"
+        with open(prompt_path, 'r', encoding='utf-8') as f:
+            prompt_template = f.read().strip()
+        
+        # Format prompt with markdown content
+        prompt = prompt_template.format(markdown_content=markdown_content)
+        
+        # Call OpenAI API
+        response = await asyncio.to_thread(
+            client.chat.completions.create,
+            model=model,
+            messages=[
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.3,
+            max_tokens=100
+        )
+        
+        title = response.choices[0].message.content
+        if title:
+            title = title.strip()
+        else:
+            title = ""
+        
+        # Fallback to ensure we have a valid title
+        if not title or len(title) > 200:
+            return extract_first_biggest_heading_fallback(markdown_content)
+            
+        return title
+        
+    except Exception as e:
+        logger.error(f"Failed to extract title with AI: {str(e)}")
+        return extract_first_biggest_heading_fallback(markdown_content)
+
+
+def extract_first_biggest_heading_fallback(markdown_content: str) -> str:
+    """
+    Fallback method to extract the first, biggest heading from markdown content.
 
     Prioritizes headings by size (# > ## > ### etc.) and returns the first one found
     at the highest level.
@@ -75,9 +129,10 @@ class MetadataGeneratorWorker(BaseWorker):
         analysis.status = AnalysisStatus.GENERATING_METADATA
         await analysis.save(link_rule=WriteRules.WRITE)
 
-        # Extract title from the first, biggest heading
-        title = extract_first_biggest_heading(analysis.processed_markdown)
-        logger.info(f"Extracted title: '{title}' for analysis {analysis.id}")
+        # Extract title using AI analysis of the markdown content
+        markdown_content = analysis.processed_markdown or ""
+        title = await extract_title_with_ai(markdown_content)
+        logger.info(f"Extracted title using AI: '{title}' for analysis {analysis.id}")
 
         # Create a Paper object for the uploaded paper
         paper = Paper(
@@ -89,8 +144,8 @@ class MetadataGeneratorWorker(BaseWorker):
         logger.info(f"Created paper {paper.id} with title '{title}'")
 
         # Update the analysis with the paper ID and status
-        # noinspection PyTypeChecker
-        analysis.paper = paper
+        from beanie import Link
+        analysis.paper = Link(paper, Paper)
         analysis.status = AnalysisStatus.METADATA_GENERATED
         await analysis.save(link_rule=WriteRules.WRITE)
 
