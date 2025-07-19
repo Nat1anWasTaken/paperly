@@ -6,7 +6,8 @@ import { usePapers, usePrefetchPaper } from "@/hooks/use-papers";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { FileText, Home, Calendar, ExternalLink, Loader2, AlertCircle, Clock, Plus, Search, X } from "lucide-react";
+import { UploadModal } from "@/components/upload-modal";
+import { FileText, Home, Calendar, ExternalLink, Loader2, AlertCircle, Clock, Plus, Search, X, Upload } from "lucide-react";
 import Link from "next/link";
 
 export default function PapersPage() {
@@ -87,12 +88,14 @@ export default function PapersPage() {
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <Link href="/">
-                <Button size="sm" className="flex items-center gap-2">
-                  <Plus className="w-4 h-4" />
-                  Upload Paper
-                </Button>
-              </Link>
+              <UploadModal
+                trigger={
+                  <Button variant="default" size="lg" className="font-bold">
+                    <Upload className="w-4 h-4" />
+                    Upload Paper
+                  </Button>
+                }
+              />
               <ThemeToggle />
             </div>
           </div>
@@ -178,12 +181,14 @@ export default function PapersPage() {
                 </div>
                 <h3 className="text-2xl font-semibold mb-3 text-foreground">No papers yet</h3>
                 <p className="text-muted-foreground mb-8 max-w-md mx-auto">Your library is empty. Upload your first research paper to start building your collection.</p>
-                <Link href="/">
-                  <Button size="lg" className="flex items-center gap-2">
-                    <Plus className="w-5 h-5" />
-                    Upload Your First Paper
-                  </Button>
-                </Link>
+                <UploadModal
+                  trigger={
+                    <Button variant="default" size="lg" className="font-bold">
+                      <Upload className="w-4 h-4" />
+                      Upload Your First Paper
+                    </Button>
+                  }
+                />
               </div>
             ) : filteredPapers.length === 0 ? (
               <div className="text-center py-20">
