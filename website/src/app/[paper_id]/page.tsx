@@ -2,8 +2,8 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { usePaperBlocks, usePrefetchPaper } from "@/hooks/use-papers";
-import { PaperBlock, BlockKind, HeaderBlock } from "@/data/types";
+import { usePaperData } from "@/hooks/use-papers";
+import { PaperSection } from "@/data/types";
 
 interface PaperPageProps {
   params: Promise<{
@@ -12,17 +12,10 @@ interface PaperPageProps {
 }
 
 // Helper function to find the first meaningful section
-function findFirstSection(blocks: PaperBlock[]): string | null {
-  // Look for the first header that could serve as a section
-  for (const block of blocks) {
-    if (block.kind === BlockKind.HEADER && block.level <= 2) {
-      return `section-${block.id}`;
-    }
-  }
-
-  // If no headers found, create a default section
-  if (blocks.length > 0) {
-    return "section-default";
+function findFirstSection(sections: PaperSection[]): string | null {
+  // Return the first section's ID
+  if (sections.length > 0) {
+    return sections[0].id;
   }
 
   return null;
@@ -31,20 +24,15 @@ function findFirstSection(blocks: PaperBlock[]): string | null {
 export default function PaperPage({ params }: PaperPageProps) {
   const { paper_id } = React.use(params);
   const router = useRouter();
-  const { prefetchPaper } = usePrefetchPaper();
 
-  const { data: blocks, isLoading: loading, error } = usePaperBlocks(paper_id);
-
-  // Prefetch all paper data immediately when this page loads
-  React.useEffect(() => {
-    prefetchPaper(paper_id);
-  }, [paper_id, prefetchPaper]);
+  const { sections, isLoading: loading, error, hasCachedData } = usePaperData(paper_id);
 
   React.useEffect(() => {
-    if (blocks && !loading) {
-      console.log("Fetched blocks:", blocks.length);
+    if (sections && !loading) {
+      console.log("Fetched sections:", sections.length);
+      console.log("All sections:", sections.map(s => ({ id: s.id, title: s.title })));
 
-      const firstSectionId = findFirstSection(blocks);
+      const firstSectionId = findFirstSection(sections);
 
       console.log("First section ID:", firstSectionId);
 
@@ -53,9 +41,10 @@ export default function PaperPage({ params }: PaperPageProps) {
         router.replace(`/${paper_id}/${firstSectionId}`);
       }
     }
-  }, [blocks, loading, paper_id, router]);
+  }, [sections, loading, paper_id, router]);
 
-  if (loading) {
+  // Only show full loading screen if we have no cached data
+  if (loading && !hasCachedData) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -80,8 +69,8 @@ export default function PaperPage({ params }: PaperPageProps) {
     );
   }
 
-  // Check if blocks are loaded but empty
-  if (!loading && blocks && blocks.length === 0) {
+  // Check if sections are loaded but empty
+  if (!loading && sections && sections.length === 0) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">

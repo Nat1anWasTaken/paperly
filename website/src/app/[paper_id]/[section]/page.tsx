@@ -20,8 +20,8 @@ export default function PaperSectionPage({ params }: PaperSectionPageProps) {
 
   const { paper, sections, isLoading: loading, isRefetching, isError, error, hasCachedData } = usePaperData(paper_id);
 
-  // Only show full loading screen if we have no cached data
-  if (loading && !hasCachedData) {
+  // Show loading screen if we have no cached data or if sections are still loading
+  if ((loading && !hasCachedData) || !sections) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -46,14 +46,19 @@ export default function PaperSectionPage({ params }: PaperSectionPageProps) {
     );
   }
 
-  if (!paper || !sections) {
+  if (!paper) {
+    console.log("Paper not loaded yet:", { paper: !!paper, loading, hasCachedData });
     notFound();
   }
 
   // Find the current section
+  console.log("Looking for section:", section);
+  console.log("Available sections:", sections?.map(s => ({ id: s.id, title: s.title })));
+  
   const currentSection = sections.find((s) => s.id === section);
 
   if (!currentSection) {
+    console.log("Section not found:", section);
     notFound();
   }
 

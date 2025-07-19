@@ -97,8 +97,12 @@ export function usePaperSections(paperId: string) {
   return useQuery({
     queryKey: paperKeys.sections(paperId),
     queryFn: async () => {
+      console.log("usePaperSections: fetching blocks for", paperId);
       const blocks = await api.getPaperBlocksForUI(paperId);
-      return organizeBlocksIntoSections(blocks);
+      console.log("usePaperSections: got blocks", blocks.length);
+      const sections = organizeBlocksIntoSections(blocks);
+      console.log("usePaperSections: organized into sections", sections.length);
+      return sections;
     },
     enabled: !!paperId,
     staleTime: 15 * 60 * 1000 // 15 minutes - sections derived from static content
@@ -113,6 +117,16 @@ export function usePaperData(paperId: string) {
   const paperQuery = usePaper(paperId);
   const blocksQuery = usePaperBlocks(paperId);
   const sectionsQuery = usePaperSections(paperId);
+
+  console.log("usePaperData debug:", {
+    paperId,
+    paper: !!paperQuery.data,
+    blocks: !!blocksQuery.data,
+    sections: !!sectionsQuery.data,
+    sectionsLoading: sectionsQuery.isLoading,
+    sectionsError: sectionsQuery.isError,
+    sectionsEnabled: sectionsQuery.enabled
+  });
 
   // Check if we have any cached data
   const hasCachedData = !!(paperQuery.data || blocksQuery.data || sectionsQuery.data);
