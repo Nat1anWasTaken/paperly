@@ -98,7 +98,8 @@ class MarkdownExtractionWorker(BaseWorker):
 
             # Convert PDF to markdown in thread pool to avoid blocking
             loop = asyncio.get_event_loop()
-            rendered = self.converter(file_object)
+
+            rendered = await loop.run_in_executor(None, self.converter, file_object)
 
             logger.debug(
                 f"PDF conversion completed for analysis {analysis.id}, extracting text and images"
