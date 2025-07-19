@@ -125,7 +125,7 @@ export function usePaperData(paperId: string) {
     sections: !!sectionsQuery.data,
     sectionsLoading: sectionsQuery.isLoading,
     sectionsError: sectionsQuery.isError,
-    sectionsEnabled: sectionsQuery.enabled
+    sectionsEnabled: sectionsQuery.isEnabled
   });
 
   // Check if we have any cached data

@@ -24,32 +24,35 @@ function findFirstSection(sections: PaperSection[]): string | null {
 export default function PaperPage({ params }: PaperPageProps) {
   const { paper_id } = React.use(params);
   const router = useRouter();
+  const [hasRedirected, setHasRedirected] = React.useState(false);
 
   const { sections, isLoading: loading, error, hasCachedData } = usePaperData(paper_id);
 
+  // Redirect immediately when sections are available (either from cache or fresh data)
   React.useEffect(() => {
-    if (sections && !loading) {
-      console.log("Fetched sections:", sections.length);
+    if (sections && sections.length > 0 && !hasRedirected) {
+      console.log("Sections available, redirecting...", sections.length);
       console.log("All sections:", sections.map(s => ({ id: s.id, title: s.title })));
 
       const firstSectionId = findFirstSection(sections);
-
       console.log("First section ID:", firstSectionId);
 
       if (firstSectionId) {
-        // Use router.replace instead of redirect
+        setHasRedirected(true);
         router.replace(`/${paper_id}/${firstSectionId}`);
       }
     }
-  }, [sections, loading, paper_id, router]);
+  }, [sections, paper_id, router, hasRedirected]);
 
-  // Only show full loading screen if we have no cached data
-  if (loading && !hasCachedData) {
+  // Show loading screen while we're waiting for sections or during redirect
+  if (loading || hasRedirected || !sections) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading paper...</p>
+          <p className="text-muted-foreground">
+            {hasRedirected ? "Redirecting..." : "Loading paper..."}
+          </p>
         </div>
       </div>
     );
@@ -70,7 +73,7 @@ export default function PaperPage({ params }: PaperPageProps) {
   }
 
   // Check if sections are loaded but empty
-  if (!loading && sections && sections.length === 0) {
+  if (sections && sections.length === 0) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -81,12 +84,12 @@ export default function PaperPage({ params }: PaperPageProps) {
     );
   }
 
-  // This should not be reached due to redirect, but just in case
+  // This should rarely be reached due to redirect, but keep as fallback
   return (
     <div className="flex items-center justify-center min-h-screen">
       <div className="text-center">
-        <h1 className="text-2xl font-bold mb-4">Paper Not Found</h1>
-        <p className="text-muted-foreground">The requested paper could not be found.</p>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+        <p className="text-muted-foreground">Preparing paper...</p>
       </div>
     </div>
   );

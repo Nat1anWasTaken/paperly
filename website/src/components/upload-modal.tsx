@@ -195,7 +195,7 @@ export function UploadModal({ trigger }: UploadModalProps) {
 
   const viewPaper = (analysis: StoredAnalysis) => {
     if (analysis.paperId && analysis.status === "ready") {
-      window.open(`/${analysis.paperId}`, "_blank");
+      window.open(`/${analysis.paperId}`, "_self");
     }
   };
 
