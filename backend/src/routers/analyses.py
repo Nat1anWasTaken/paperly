@@ -2,8 +2,8 @@ from typing import Optional
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-
-from src.models.analysis import AnalysisStatus, Analysis
+from beanie import Link
+from src.models.analysis import Analysis, AnalysisStatus
 from src.utils.object_id import validate_object_id_or_raise_http_exception
 
 router = APIRouter(prefix="/analyses")
@@ -13,6 +13,7 @@ class CreateAnalysisRequest(BaseModel):
     """
     Request model for creating an analysis task.
     """
+
     file_key: str  # The file key for the uploaded paper file in S3. Reference to POST /papers/file.
 
 
@@ -20,6 +21,7 @@ class CreateAnalysisResponse(BaseModel):
     """
     Response model for analysis creation endpoint.
     """
+
     analysis_id: str
     status: AnalysisStatus = AnalysisStatus.CREATED
     message: str = "Analysis task created successfully."
@@ -35,9 +37,7 @@ async def create_analysis(request: CreateAnalysisRequest) -> CreateAnalysisRespo
     :rtype: CreateAnalysisResponse
     """
     analysis = Analysis(
-        status=AnalysisStatus.CREATED,
-        file_key=request.file_key,
-        paper=None
+        status=AnalysisStatus.CREATED, file_key=request.file_key, paper=None
     )
 
     await analysis.insert()
@@ -51,6 +51,7 @@ class GetAnalysisResponse(BaseModel):
     """
     Response model for retrieving an analysis task.
     """
+
     analysis_id: str
     status: AnalysisStatus
     file_key: str
@@ -73,9 +74,14 @@ async def get_analysis(analysis_id: str) -> GetAnalysisResponse:
     if not analysis:
         raise HTTPException(status_code=404, detail="Analysis not found")
 
+    if isinstance(analysis.paper, Link):
+        paper_id = str(analysis.paper.ref.id)
+    else:
+        paper_id = None
+
     return GetAnalysisResponse(
         analysis_id=str(analysis.id),
         status=analysis.status,
         file_key=analysis.file_key,
-        paper_id=str(analysis.paper.ref.id) if analysis.paper else None
+        paper_id=paper_id,
     )
