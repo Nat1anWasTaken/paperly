@@ -279,7 +279,7 @@ export function UploadModal({ trigger }: UploadModalProps) {
               onDrop={handleDrop}
             >
               <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
-              <p className="text-foreground font-medium mb-1">{isUploading ? "Processing uploads..." : "Drop PDF files here"}</p>
+              <p className="text-foreground font-medium mb-1">{isUploading ? "Processing uploads..." : "Drop PDF files here or choose files"}</p>
               <p className="text-sm text-muted-foreground mb-4">Supports PDF files up to 50MB</p>
               <Input ref={fileInputRef} type="file" accept=".pdf" multiple onChange={handleFileInput} className="hidden" id="file-upload" disabled={isUploading} />
               <Label htmlFor="file-upload" className="cursor-pointer w-full flex flex-row items-center justify-center">
