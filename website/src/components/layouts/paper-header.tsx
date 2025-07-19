@@ -1,12 +1,11 @@
 "use client";
 
-import * as React from "react";
-import { FileText, Menu, MousePointer2, Languages } from "lucide-react";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { LanguageSelect } from "@/components/ui/language-select";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { useSelection } from "@/contexts/selection-context";
 import { useTranslation } from "@/contexts/translation-context";
+import { FileText, Languages, Menu, MousePointer2 } from "lucide-react";
 
 interface PaperHeaderProps {
   paperTitle: string;
@@ -25,35 +24,17 @@ export function PaperHeader({ paperTitle, onToggleSidebar }: PaperHeaderProps) {
         </Button>
         <FileText className="size-5 text-primary" />
         <span className="text-base font-medium text-foreground truncate max-w-[400px]">{paperTitle}</span>
-        
-        {/* Translation Controls */}
-        <div className="flex items-center gap-2 ml-4">
-          <Button
-            variant={isTranslationMode ? "default" : "outline"}
-            size="icon"
-            onClick={toggleTranslationMode}
-            className="size-9"
-            title={isTranslationMode ? "Show original" : "Translate"}
-          >
-            <Languages className="size-4" />
-          </Button>
-          
-          {isTranslationMode && (
-            <LanguageSelect
-              value={currentLanguage}
-              onValueChange={setCurrentLanguage}
-              placeholder="Select language"
-              className="w-36"
-            />
-          )}
-        </div>
       </div>
 
       <div className="flex items-center gap-2">
-        <Button 
-          variant={isSelectionMode ? "default" : "outline"} 
-          size="icon" 
-          onClick={() => setSelectionMode(!isSelectionMode)} 
+        {isTranslationMode && <LanguageSelect value={currentLanguage} onValueChange={setCurrentLanguage} placeholder="Select language" className="w-36" />}
+        <Button variant={isTranslationMode ? "default" : "outline"} size="icon" onClick={toggleTranslationMode} className="size-9" title={isTranslationMode ? "Show original" : "Translate"}>
+          <Languages className="size-4" />
+        </Button>
+        <Button
+          variant={isSelectionMode ? "default" : "outline"}
+          size="icon"
+          onClick={() => setSelectionMode(!isSelectionMode)}
           className="size-9"
           title={isSelectionMode ? "Exit selection mode" : "Select blocks"}
         >
