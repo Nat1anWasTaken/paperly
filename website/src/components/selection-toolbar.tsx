@@ -8,7 +8,7 @@ import { Loader2, Sparkles, X } from "lucide-react";
 import { useSelection } from "@/contexts/selection-context";
 import { useCreateSummary } from "@/hooks/use-analysis";
 import { api } from "@/lib/api";
-
+import { MdxRenderer } from "@/components/ui/mdx-renderer";
 
 export function SelectionToolbar() {
   const { selectedBlockIds, hasSelections, clearSelections } = useSelection();
@@ -68,10 +68,7 @@ export function SelectionToolbar() {
         </div>
 
         <div className="flex items-center gap-2">
-          <LanguageSelect 
-            value={selectedLanguage} 
-            onValueChange={setSelectedLanguage}
-          />
+          <LanguageSelect value={selectedLanguage} onValueChange={setSelectedLanguage} />
 
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
@@ -94,8 +91,8 @@ export function SelectionToolbar() {
                     <span>Generating summary...</span>
                   </div>
                 ) : (
-                  <div className="prose prose-sm dark:prose-invert max-w-none">
-                    <pre className="whitespace-pre-wrap font-sans text-foreground leading-relaxed">{summary || "Summary will appear here..."}</pre>
+                  <div className="scroll-auto max-h-[75vh]">
+                    <MdxRenderer content={summary || "Summary will appear here..."} />
                   </div>
                 )}
               </div>
