@@ -57,7 +57,7 @@ export function PaperNavigation({ paperSections, activeSectionId, onSectionClick
               }}
             >
               <span className="text-sm text-muted-foreground mr-2">{section.level === 1 ? "•" : section.level === 2 ? "◦" : "▪"}</span>
-              {section.title}
+              <span className="truncate">{section.title}</span>
             </Button>
           ))}
         </nav>
