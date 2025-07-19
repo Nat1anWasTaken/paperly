@@ -14,16 +14,16 @@ logger = get_logger(__name__)
 router = APIRouter(prefix="/translations")
 
 
-
 class TranslationResponse(BaseModel):
     """
     Response model for block translation.
-    
+
     :param id: Translation ID.
     :param block_id: ID of the translated block.
     :param content: Translated content.
     :param language: Language code of the translation.
     """
+
     id: str
     block_id: str
     content: str
@@ -33,7 +33,7 @@ class TranslationResponse(BaseModel):
     def from_translation(cls, translation: Translation) -> "TranslationResponse":
         """
         Create a response model from a Translation document.
-        
+
         :param translation: The translation document.
         :return: The response model.
         :rtype: TranslationResponse
@@ -42,16 +42,15 @@ class TranslationResponse(BaseModel):
             id=str(translation.id),
             block_id=str(translation.block.ref.id),
             content=translation.content,
-            language=translation.language
+            language=translation.language,
         )
-
 
 
 @router.get("/blocks/{block_id}", response_model=List[TranslationResponse])
 async def get_block_translations(block_id: str):
     """
     Get all translations for a specific block.
-    
+
     :param block_id: ID of the block to get translations for.
     :return: List of translations for the block.
     :rtype: List[TranslationResponse]
@@ -70,12 +69,14 @@ async def get_block_translations(block_id: str):
     return [TranslationResponse.from_translation(t) for t in translations]
 
 
-@router.get("/blocks/{block_id}/language/{language}", response_model=TranslationResponse)
+@router.get(
+    "/blocks/{block_id}/language/{language}", response_model=TranslationResponse
+)
 async def get_block_translation(block_id: str, language: LanguageCode):
     """
     Get a specific translation for a block in the given language.
     If the translation doesn't exist, it will be created automatically.
-    
+
     :param block_id: ID of the block to get translation for.
     :param language: Language code of the desired translation.
     :return: The translation for the block in the specified language.
@@ -91,8 +92,7 @@ async def get_block_translation(block_id: str, language: LanguageCode):
 
     # Find the specific translation
     translation = await Translation.find_one(
-        Translation.block.id == block.id,
-        Translation.language == language
+        Translation.block.id == block.id, Translation.language == language
     )
 
     # If translation doesn't exist, create it
@@ -112,7 +112,7 @@ async def get_block_translation(block_id: str, language: LanguageCode):
 async def delete_block_translation(block_id: str, language: LanguageCode):
     """
     Delete a specific translation for a block in the given language.
-    
+
     :param block_id: ID of the block to delete translation for.
     :param language: Language code of the translation to delete.
     :return: Success message.
@@ -128,30 +128,18 @@ async def delete_block_translation(block_id: str, language: LanguageCode):
 
     # Find and delete the translation
     translation = await Translation.find_one(
-        Translation.block.id == block.id,
-        Translation.language == language
+        Translation.block.id == block.id, Translation.language == language
     )
 
     if not translation:
         raise HTTPException(
             status_code=404,
-            detail=f"Translation not found for block {block_id} in language {language.value}"
+            detail=f"Translation not found for block {block_id} in language {language.value}",
         )
 
     await translation.delete()
-    logger.info(f"Deleted translation for block {block_id} in language {language.value}")
+    logger.info(
+        f"Deleted translation for block {block_id} in language {language.value}"
+    )
 
     return {"message": "Translation deleted successfully"}
-
-
-@router.get("/languages", response_model=List[str])
-async def get_supported_languages():
-    """
-    Get all supported language codes for translation.
-    
-    :return: List of supported language codes with their names.
-    :rtype: List[dict]
-    """
-    languages = [lang_code for lang_code in LanguageCode]
-
-    return languages

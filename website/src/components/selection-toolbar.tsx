@@ -2,26 +2,17 @@
 
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Loader2, Sparkles, X, Languages } from "lucide-react";
+import { LanguageSelect } from "@/components/ui/language-select";
+import { Loader2, Sparkles, X } from "lucide-react";
 import { useSelection } from "@/contexts/selection-context";
 import { useCreateSummary } from "@/hooks/use-analysis";
 import { api } from "@/lib/api";
 
-const SUPPORTED_LANGUAGES = [
-  { value: "en_US", label: "English (US)" },
-  { value: "es_ES", label: "Spanish" },
-  { value: "fr_FR", label: "French" },
-  { value: "de_DE", label: "German" },
-  { value: "zh_CN", label: "Chinese (Simplified)" },
-  { value: "ja_JP", label: "Japanese" },
-  { value: "ko_KR", label: "Korean" }
-];
 
 export function SelectionToolbar() {
   const { selectedBlockIds, hasSelections, clearSelections } = useSelection();
-  const [selectedLanguage, setSelectedLanguage] = useState("en_US");
+  const [selectedLanguage, setSelectedLanguage] = useState("en");
   const [summary, setSummary] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
@@ -77,19 +68,10 @@ export function SelectionToolbar() {
         </div>
 
         <div className="flex items-center gap-2">
-          <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
-            <SelectTrigger className="w-40">
-              <Languages className="w-4 h-4 mr-2" />
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {SUPPORTED_LANGUAGES.map((lang) => (
-                <SelectItem key={lang.value} value={lang.value}>
-                  {lang.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <LanguageSelect 
+            value={selectedLanguage} 
+            onValueChange={setSelectedLanguage}
+          />
 
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>

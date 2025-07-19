@@ -61,7 +61,7 @@ export function useCreateAnalysis() {
  */
 export function useCreateSummary() {
   return useMutation({
-    mutationFn: async ({ block_ids, language = "en_US" }: { block_ids: string[]; language?: string }) => {
+    mutationFn: async ({ block_ids, language = "en" }: { block_ids: string[]; language?: string }) => {
       return api.createSummary({ block_ids, language });
     }
   });
@@ -72,8 +72,19 @@ export function useCreateSummary() {
  */
 export function useChatWithPaper() {
   return useMutation({
-    mutationFn: async ({ paperId, message, history = [], language = "en_US" }: { paperId: string; message: string; history?: Array<{ role: string; content: string }>; language?: string }) => {
+    mutationFn: async ({ paperId, message, history = [], language = "en" }: { paperId: string; message: string; history?: Array<{ role: string; content: string }>; language?: string }) => {
       return api.chatWithPaper(paperId, message, history, language);
     }
+  });
+}
+
+/**
+ * Get supported languages
+ */
+export function useLanguages() {
+  return useQuery({
+    queryKey: ["languages"],
+    queryFn: () => api.getLanguages(),
+    staleTime: 5 * 60 * 1000 // Cache for 5 minutes since languages don't change often
   });
 }

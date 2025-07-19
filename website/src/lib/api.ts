@@ -43,6 +43,11 @@ export interface SummaryRequest {
   language?: string;
 }
 
+export interface Language {
+  code: string;
+  name: string;
+}
+
 export class PaperlyAPI {
   private baseUrl: string;
 
@@ -64,7 +69,7 @@ export class PaperlyAPI {
       },
       body: JSON.stringify({
         block_ids: request.block_ids,
-        language: request.language || "en_US"
+        language: request.language || "en"
       })
     });
 
@@ -245,7 +250,7 @@ export class PaperlyAPI {
   /**
    * Chat with a paper
    */
-  async chatWithPaper(paperId: string, message: string, history: Array<{ role: string; content: string }> = [], language: string = "en_US"): Promise<Response> {
+  async chatWithPaper(paperId: string, message: string, history: Array<{ role: string; content: string }> = [], language: string = "en"): Promise<Response> {
     const response = await fetch(`${this.baseUrl}/chat/${paperId}`, {
       method: "POST",
       headers: {
@@ -263,6 +268,17 @@ export class PaperlyAPI {
     }
 
     return response;
+  }
+
+  /**
+   * Get supported languages
+   */
+  async getLanguages(): Promise<Language[]> {
+    const response = await fetch(`${this.baseUrl}/languages`);
+    if (!response.ok) {
+      throw new Error(`Failed to get languages: ${response.statusText}`);
+    }
+    return response.json();
   }
 }
 

@@ -84,22 +84,8 @@ def _get_translation_prompt(content: str, target_language: LanguageCode, block_k
     :return: The translation prompt.
     :rtype: str
     """
-    # Map language codes to human-readable names
-    language_map = {
-        LanguageCode.EN: "English",
-        LanguageCode.ES: "Spanish",
-        LanguageCode.FR: "French",
-        LanguageCode.DE: "German",
-        LanguageCode.JA: "Japanese",
-        LanguageCode.KO: "Korean",
-        LanguageCode.PT: "Portuguese",
-        LanguageCode.RU: "Russian",
-        LanguageCode.AR: "Arabic",
-        LanguageCode.HI: "Hindi",
-        LanguageCode.ZH_CN: "Chinese (Simplified)",
-        LanguageCode.ZH_TW: "Chinese (Traditional)",
-    }
-    language_name = language_map.get(target_language, target_language.value)
+    # Get the human-readable language name
+    language_name = target_language.full_name
 
     # Read the prompt template
     current_dir = os.path.dirname(
