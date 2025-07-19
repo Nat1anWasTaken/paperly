@@ -11,6 +11,7 @@ import { ReferenceBlockComponent } from "./reference-block";
 import { FootnoteBlockComponent } from "./footnote-block";
 import { QuizBlockComponent } from "./quiz-block";
 import { SelectableBlockWrapper } from "@/components/selectable-block-wrapper";
+import { TranslatedBlockWrapper } from "./translated-block-wrapper";
 
 // Export all block components
 export {
@@ -62,5 +63,11 @@ export function BlockRenderer({ block }: BlockRendererProps) {
     }
   };
 
-  return <SelectableBlockWrapper blockId={block.id}>{renderBlockContent()}</SelectableBlockWrapper>;
+  return (
+    <SelectableBlockWrapper blockId={block.id}>
+      <TranslatedBlockWrapper block={block}>
+        {renderBlockContent()}
+      </TranslatedBlockWrapper>
+    </SelectableBlockWrapper>
+  );
 }

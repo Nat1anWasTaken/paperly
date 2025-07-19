@@ -88,3 +88,44 @@ export function useLanguages() {
     staleTime: 5 * 60 * 1000 // Cache for 5 minutes since languages don't change often
   });
 }
+
+// Translation Query Keys
+export const translationKeys = {
+  all: ["translations"] as const,
+  block: (blockId: string) => [...translationKeys.all, "block", blockId] as const,
+  blockLanguage: (blockId: string, language: string) => [...translationKeys.block(blockId), language] as const
+};
+
+/**
+ * Get block translation for a specific language
+ */
+export function useBlockTranslation(blockId: string, language: string, enabled = true) {
+  return useQuery({
+    queryKey: translationKeys.blockLanguage(blockId, language),
+    queryFn: () => api.getBlockTranslation(blockId, language),
+    enabled: enabled && !!blockId && !!language && language !== "en", // Don't fetch for English (original)
+    staleTime: 15 * 60 * 1000 // Cache for 15 minutes - translations are relatively static
+  });
+}
+
+/**
+ * Get all translations for a block
+ */
+export function useBlockTranslations(blockId: string, enabled = true) {
+  return useQuery({
+    queryKey: translationKeys.block(blockId),
+    queryFn: () => api.getBlockTranslations(blockId),
+    enabled: enabled && !!blockId,
+    staleTime: 15 * 60 * 1000
+  });
+}
+
+/**
+ * Delete block translation mutation
+ */
+export function useDeleteBlockTranslation() {
+  return useMutation({
+    mutationFn: ({ blockId, language }: { blockId: string; language: string }) => 
+      api.deleteBlockTranslation(blockId, language)
+  });
+}

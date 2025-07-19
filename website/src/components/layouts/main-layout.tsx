@@ -8,6 +8,7 @@ import { PaperNavigation } from "./paper-navigation";
 import { PaperHeader } from "./paper-header";
 import { PaperNavigationFooter } from "./paper-navigation-footer";
 import { SelectionProvider } from "@/contexts/selection-context";
+import { TranslationProvider } from "@/contexts/translation-context";
 import { SelectionToolbar } from "@/components/selection-toolbar";
 import { PaperData, PaperSection } from "@/data/types";
 
@@ -64,8 +65,9 @@ export function MainLayout({ children, paperData, currentSectionId = "" }: MainL
   };
 
   return (
-    <SelectionProvider>
-      <div className="h-screen w-full bg-background">
+    <TranslationProvider>
+      <SelectionProvider>
+        <div className="h-screen w-full bg-background">
         <ResizablePanelGroup direction="horizontal" className="h-full">
           {/* Left Sidebar - Paper Navigation */}
           {!isSidebarCollapsed && (
@@ -110,5 +112,6 @@ export function MainLayout({ children, paperData, currentSectionId = "" }: MainL
         <SelectionToolbar />
       </div>
     </SelectionProvider>
+    </TranslationProvider>
   );
 }

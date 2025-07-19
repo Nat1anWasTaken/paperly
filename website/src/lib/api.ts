@@ -48,6 +48,13 @@ export interface Language {
   name: string;
 }
 
+export interface TranslationResponse {
+  id: string;
+  block_id: string;
+  content: string;
+  language: string;
+}
+
 export class PaperlyAPI {
   private baseUrl: string;
 
@@ -279,6 +286,41 @@ export class PaperlyAPI {
       throw new Error(`Failed to get languages: ${response.statusText}`);
     }
     return response.json();
+  }
+
+  /**
+   * Get block translation for a specific language
+   * Creates translation if it doesn't exist
+   */
+  async getBlockTranslation(blockId: string, language: string): Promise<TranslationResponse> {
+    const response = await fetch(`${this.baseUrl}/translations/blocks/${blockId}/language/${language}`);
+    if (!response.ok) {
+      throw new Error(`Failed to get translation: ${response.statusText}`);
+    }
+    return response.json();
+  }
+
+  /**
+   * Get all translations for a block
+   */
+  async getBlockTranslations(blockId: string): Promise<TranslationResponse[]> {
+    const response = await fetch(`${this.baseUrl}/translations/blocks/${blockId}`);
+    if (!response.ok) {
+      throw new Error(`Failed to get block translations: ${response.statusText}`);
+    }
+    return response.json();
+  }
+
+  /**
+   * Delete a specific translation
+   */
+  async deleteBlockTranslation(blockId: string, language: string): Promise<void> {
+    const response = await fetch(`${this.baseUrl}/translations/blocks/${blockId}/language/${language}`, {
+      method: 'DELETE'
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to delete translation: ${response.statusText}`);
+    }
   }
 }
 

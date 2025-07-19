@@ -1,0 +1,612 @@
+{
+  "openapi": "3.1.0",
+  "info": { "title": "FastAPI", "version": "0.1.0" },
+  "paths": {
+    "/papers/upload_url": {
+      "get": {
+        "summary": "Get Upload Url",
+        "description": "Obtain a pre-signed URL for uploading a paper file to service's bucket. You must upload the file before creating a analysis task.\n\n:return: Pre-signed URL for file upload.\n:rtype: FileUploadResponse",
+        "operationId": "get_upload_url_papers_upload_url_get",
+        "responses": { "200": { "description": "Successful Response", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/FileUploadResponse" } } } } }
+      }
+    },
+    "/papers/": {
+      "get": {
+        "summary": "Get Papers",
+        "description": "Retrieve all papers from the database.\n\n:return: List of all papers.\n:rtype: List[Paper]",
+        "operationId": "get_papers_papers__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "items": { "$ref": "#/components/schemas/Paper" }, "type": "array", "title": "Response Get Papers Papers  Get" } } }
+          }
+        }
+      }
+    },
+    "/papers/{paper_id}": {
+      "get": {
+        "summary": "Get Paper",
+        "description": "Retrieve a specific paper by its ID.\n\n:param paper_id: The unique identifier of the paper.\n:return: The paper with the specified ID.\n:rtype: Paper\n:raises HTTPException: If the paper is not found.",
+        "operationId": "get_paper_papers__paper_id__get",
+        "parameters": [{ "name": "paper_id", "in": "path", "required": true, "schema": { "type": "string", "title": "Paper Id" } }],
+        "responses": {
+          "200": { "description": "Successful Response", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Paper" } } } },
+          "422": { "description": "Validation Error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } } }
+        }
+      }
+    },
+    "/papers/{paper_id}/blocks": {
+      "get": {
+        "summary": "Get Paper Blocks",
+        "description": "Retrieve all blocks of a specific paper by its ID.\n\n:param paper_id: The unique identifier of the paper.\n:return: A list of blocks associated with the paper.\n:rtype: PaperBlocksResponse\n:raises HTTPException: If the paper is not found.",
+        "operationId": "get_paper_blocks_papers__paper_id__blocks_get",
+        "parameters": [{ "name": "paper_id", "in": "path", "required": true, "schema": { "type": "string", "title": "Paper Id" } }],
+        "responses": {
+          "200": { "description": "Successful Response", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PaperBlocksResponse" } } } },
+          "422": { "description": "Validation Error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } } }
+        }
+      }
+    },
+    "/analyses/": {
+      "post": {
+        "summary": "Create Analysis",
+        "description": "Endpoint to create a new analysis task.\n\n:param request: Request containing file key for the uploaded paper.\n:return: Response containing analysis ID and status.\n:rtype: CreateAnalysisResponse",
+        "operationId": "create_analysis_analyses__post",
+        "requestBody": { "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CreateAnalysisRequest" } } }, "required": true },
+        "responses": {
+          "200": { "description": "Successful Response", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CreateAnalysisResponse" } } } },
+          "422": { "description": "Validation Error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } } }
+        }
+      }
+    },
+    "/analyses/{analysis_id}": {
+      "get": {
+        "summary": "Get Analysis",
+        "description": "Retrieve an analysis task by its ID.\n\n:param analysis_id: Unique identifier of the analysis task.\n:return: Analysis details including status and file information.\n:rtype: GetAnalysisResponse",
+        "operationId": "get_analysis_analyses__analysis_id__get",
+        "parameters": [{ "name": "analysis_id", "in": "path", "required": true, "schema": { "type": "string", "title": "Analysis Id" } }],
+        "responses": {
+          "200": { "description": "Successful Response", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GetAnalysisResponse" } } } },
+          "422": { "description": "Validation Error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } } }
+        }
+      }
+    },
+    "/summaries/": {
+      "post": {
+        "summary": "Create Summary",
+        "description": "Create a streaming summary for a list of block IDs.\n\nTakes a list of block IDs and generates a comprehensive summary of their content\nusing AI. The response is streamed back to the client for real-time display.\n\n:param request: Request containing the list of block IDs to summarize and optional language.\n:return: StreamingResponse with the generated summary.\n:raises HTTPException: If blocks are not found or an error occurs during processing.",
+        "operationId": "create_summary_summaries__post",
+        "requestBody": { "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SummaryRequest" } } }, "required": true },
+        "responses": {
+          "200": { "description": "Successful Response", "content": { "application/json": { "schema": {} } } },
+          "422": { "description": "Validation Error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } } }
+        }
+      }
+    },
+    "/chat/{paper_id}": {
+      "post": {
+        "summary": "Chat With Paper",
+        "description": "Chat with a paper using its content as context.\n\nTakes a paper ID, user message, and conversation history, then generates\na streaming AI response using the paper's content as context.\n\n:param paper_id: The ID of the paper to chat about.\n:param request: Request containing the user message and conversation history.\n:return: StreamingResponse with the generated chat response.\n:raises HTTPException: If paper is not found or an error occurs during processing.",
+        "operationId": "chat_with_paper_chat__paper_id__post",
+        "parameters": [{ "name": "paper_id", "in": "path", "required": true, "schema": { "type": "string", "title": "Paper Id" } }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ChatRequest" } } } },
+        "responses": {
+          "200": { "description": "Successful Response", "content": { "application/json": { "schema": {} } } },
+          "422": { "description": "Validation Error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } } }
+        }
+      }
+    },
+    "/translations/blocks/{block_id}": {
+      "get": {
+        "summary": "Get Block Translations",
+        "description": "Get all translations for a specific block.\n\n:param block_id: ID of the block to get translations for.\n:return: List of translations for the block.\n:rtype: List[TranslationResponse]\n:raises HTTPException: If block is not found.",
+        "operationId": "get_block_translations_translations_blocks__block_id__get",
+        "parameters": [{ "name": "block_id", "in": "path", "required": true, "schema": { "type": "string", "title": "Block Id" } }],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "type": "array", "items": { "$ref": "#/components/schemas/TranslationResponse" }, "title": "Response Get Block Translations Translations Blocks  Block Id  Get" }
+              }
+            }
+          },
+          "422": { "description": "Validation Error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } } }
+        }
+      }
+    },
+    "/translations/blocks/{block_id}/language/{language}": {
+      "get": {
+        "summary": "Get Block Translation",
+        "description": "Get a specific translation for a block in the given language.\nIf the translation doesn't exist, it will be created automatically.\n\n:param block_id: ID of the block to get translation for.\n:param language: Language code of the desired translation.\n:return: The translation for the block in the specified language.\n:rtype: TranslationResponse\n:raises HTTPException: If block is not found or translation fails.",
+        "operationId": "get_block_translation_translations_blocks__block_id__language__language__get",
+        "parameters": [
+          { "name": "block_id", "in": "path", "required": true, "schema": { "type": "string", "title": "Block Id" } },
+          { "name": "language", "in": "path", "required": true, "schema": { "$ref": "#/components/schemas/LanguageCode" } }
+        ],
+        "responses": {
+          "200": { "description": "Successful Response", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TranslationResponse" } } } },
+          "422": { "description": "Validation Error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } } }
+        }
+      },
+      "delete": {
+        "summary": "Delete Block Translation",
+        "description": "Delete a specific translation for a block in the given language.\n\n:param block_id: ID of the block to delete translation for.\n:param language: Language code of the translation to delete.\n:return: Success message.\n:rtype: dict\n:raises HTTPException: If block or translation is not found.",
+        "operationId": "delete_block_translation_translations_blocks__block_id__language__language__delete",
+        "parameters": [
+          { "name": "block_id", "in": "path", "required": true, "schema": { "type": "string", "title": "Block Id" } },
+          { "name": "language", "in": "path", "required": true, "schema": { "$ref": "#/components/schemas/LanguageCode" } }
+        ],
+        "responses": {
+          "200": { "description": "Successful Response", "content": { "application/json": { "schema": {} } } },
+          "422": { "description": "Validation Error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } } }
+        }
+      }
+    },
+    "/languages": {
+      "get": {
+        "summary": "Get Supported Languages",
+        "description": "Get all supported language codes for translation.\n\n:return: List of supported language codes with their full names.\n:rtype: List[LanguageInfo]",
+        "operationId": "get_supported_languages_languages_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "items": { "$ref": "#/components/schemas/LanguageInfo" }, "type": "array", "title": "Response Get Supported Languages Languages Get" } } }
+          }
+        }
+      }
+    },
+    "/": { "get": { "summary": "Root", "operationId": "root__get", "responses": { "200": { "description": "Successful Response", "content": { "application/json": { "schema": {} } } } } } }
+  },
+  "components": {
+    "schemas": {
+      "AnalysisStatus": {
+        "type": "string",
+        "enum": [
+          "created",
+          "extracting_markdown",
+          "markdown_extracted",
+          "generating_metadata",
+          "metadata_generated",
+          "processing_into_blocks",
+          "blocks_processed",
+          "generating_quizzes",
+          "completed",
+          "errored"
+        ],
+        "title": "AnalysisStatus"
+      },
+      "BlockKind": { "type": "string", "enum": ["header", "paragraph", "figure", "table", "equation", "code_block", "quote", "callout", "reference", "footnote", "quiz"], "title": "BlockKind" },
+      "Callout": {
+        "properties": {
+          "_id": { "anyOf": [{ "$ref": "#/components/schemas/PydanticObjectId" }, { "type": "null" }], "description": "MongoDB document ObjectID" },
+          "kind": { "$ref": "#/components/schemas/BlockKind" },
+          "paper": {
+            "anyOf": [
+              { "properties": { "id": { "type": "string", "title": "Id" }, "collection": { "type": "string", "title": "Collection" } }, "type": "object", "required": ["id", "collection"] },
+              { "additionalProperties": true, "type": "object" }
+            ],
+            "title": "Paper"
+          },
+          "next_block": {
+            "anyOf": [
+              { "properties": { "id": { "type": "string", "title": "Id" }, "collection": { "type": "string", "title": "Collection" } }, "type": "object", "required": ["id", "collection"] },
+              { "additionalProperties": true, "type": "object" },
+              { "type": "null" }
+            ],
+            "title": "Next Block"
+          },
+          "text": { "type": "string", "title": "Text" }
+        },
+        "type": "object",
+        "required": ["kind", "paper", "text"],
+        "title": "Callout"
+      },
+      "ChatMessage": {
+        "properties": { "role": { "type": "string", "title": "Role" }, "content": { "type": "string", "title": "Content" } },
+        "type": "object",
+        "required": ["role", "content"],
+        "title": "ChatMessage"
+      },
+      "ChatRequest": {
+        "properties": {
+          "message": { "type": "string", "title": "Message" },
+          "history": { "anyOf": [{ "items": { "$ref": "#/components/schemas/ChatMessage" }, "type": "array" }, { "type": "null" }], "title": "History", "default": [] },
+          "language": { "anyOf": [{ "$ref": "#/components/schemas/LanguageCode" }, { "type": "null" }], "default": "en" }
+        },
+        "type": "object",
+        "required": ["message"],
+        "title": "ChatRequest"
+      },
+      "CodeBlock": {
+        "properties": {
+          "_id": { "anyOf": [{ "$ref": "#/components/schemas/PydanticObjectId" }, { "type": "null" }], "description": "MongoDB document ObjectID" },
+          "kind": { "$ref": "#/components/schemas/BlockKind" },
+          "paper": {
+            "anyOf": [
+              { "properties": { "id": { "type": "string", "title": "Id" }, "collection": { "type": "string", "title": "Collection" } }, "type": "object", "required": ["id", "collection"] },
+              { "additionalProperties": true, "type": "object" }
+            ],
+            "title": "Paper"
+          },
+          "next_block": {
+            "anyOf": [
+              { "properties": { "id": { "type": "string", "title": "Id" }, "collection": { "type": "string", "title": "Collection" } }, "type": "object", "required": ["id", "collection"] },
+              { "additionalProperties": true, "type": "object" },
+              { "type": "null" }
+            ],
+            "title": "Next Block"
+          },
+          "code": { "type": "string", "title": "Code" },
+          "language": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "Language" }
+        },
+        "type": "object",
+        "required": ["kind", "paper", "code"],
+        "title": "CodeBlock"
+      },
+      "CreateAnalysisRequest": {
+        "properties": { "file_key": { "type": "string", "title": "File Key" } },
+        "type": "object",
+        "required": ["file_key"],
+        "title": "CreateAnalysisRequest",
+        "description": "Request model for creating an analysis task."
+      },
+      "CreateAnalysisResponse": {
+        "properties": {
+          "analysis_id": { "type": "string", "title": "Analysis Id" },
+          "status": { "$ref": "#/components/schemas/AnalysisStatus", "default": "created" },
+          "message": { "type": "string", "title": "Message", "default": "Analysis task created successfully." }
+        },
+        "type": "object",
+        "required": ["analysis_id"],
+        "title": "CreateAnalysisResponse",
+        "description": "Response model for analysis creation endpoint."
+      },
+      "Equation": {
+        "properties": {
+          "_id": { "anyOf": [{ "$ref": "#/components/schemas/PydanticObjectId" }, { "type": "null" }], "description": "MongoDB document ObjectID" },
+          "kind": { "$ref": "#/components/schemas/BlockKind" },
+          "paper": {
+            "anyOf": [
+              { "properties": { "id": { "type": "string", "title": "Id" }, "collection": { "type": "string", "title": "Collection" } }, "type": "object", "required": ["id", "collection"] },
+              { "additionalProperties": true, "type": "object" }
+            ],
+            "title": "Paper"
+          },
+          "next_block": {
+            "anyOf": [
+              { "properties": { "id": { "type": "string", "title": "Id" }, "collection": { "type": "string", "title": "Collection" } }, "type": "object", "required": ["id", "collection"] },
+              { "additionalProperties": true, "type": "object" },
+              { "type": "null" }
+            ],
+            "title": "Next Block"
+          },
+          "caption": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "Caption" },
+          "equation": { "type": "string", "title": "Equation" }
+        },
+        "type": "object",
+        "required": ["kind", "paper", "equation"],
+        "title": "Equation"
+      },
+      "Figure": {
+        "properties": {
+          "_id": { "anyOf": [{ "$ref": "#/components/schemas/PydanticObjectId" }, { "type": "null" }], "description": "MongoDB document ObjectID" },
+          "kind": { "$ref": "#/components/schemas/BlockKind" },
+          "paper": {
+            "anyOf": [
+              { "properties": { "id": { "type": "string", "title": "Id" }, "collection": { "type": "string", "title": "Collection" } }, "type": "object", "required": ["id", "collection"] },
+              { "additionalProperties": true, "type": "object" }
+            ],
+            "title": "Paper"
+          },
+          "next_block": {
+            "anyOf": [
+              { "properties": { "id": { "type": "string", "title": "Id" }, "collection": { "type": "string", "title": "Collection" } }, "type": "object", "required": ["id", "collection"] },
+              { "additionalProperties": true, "type": "object" },
+              { "type": "null" }
+            ],
+            "title": "Next Block"
+          },
+          "caption": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "Caption" },
+          "figure_number": { "anyOf": [{ "type": "integer" }, { "type": "null" }], "title": "Figure Number" },
+          "image_url": { "type": "string", "title": "Image Url" }
+        },
+        "type": "object",
+        "required": ["kind", "paper", "image_url"],
+        "title": "Figure"
+      },
+      "FileUploadResponse": {
+        "properties": { "upload_url": { "type": "string", "title": "Upload Url" }, "key": { "type": "string", "title": "Key" } },
+        "type": "object",
+        "required": ["upload_url", "key"],
+        "title": "FileUploadResponse",
+        "description": "Response model for file upload endpoint.\n.\n:param upload_url: Pre-signed URL for file upload.\n:param key: S3 object key for the uploaded file."
+      },
+      "Footnote": {
+        "properties": {
+          "_id": { "anyOf": [{ "$ref": "#/components/schemas/PydanticObjectId" }, { "type": "null" }], "description": "MongoDB document ObjectID" },
+          "kind": { "$ref": "#/components/schemas/BlockKind" },
+          "paper": { "anyOf": [{ "$ref": "#/components/schemas/Paper" }, { "type": "null" }] },
+          "next_block": {
+            "anyOf": [
+              { "properties": { "id": { "type": "string", "title": "Id" }, "collection": { "type": "string", "title": "Collection" } }, "type": "object", "required": ["id", "collection"] },
+              { "additionalProperties": true, "type": "object" },
+              { "type": "null" }
+            ],
+            "title": "Next Block"
+          },
+          "text": { "type": "string", "title": "Text" },
+          "reference_number": { "type": "integer", "title": "Reference Number" }
+        },
+        "type": "object",
+        "required": ["kind", "text", "reference_number"],
+        "title": "Footnote"
+      },
+      "GetAnalysisResponse": {
+        "properties": {
+          "analysis_id": { "type": "string", "title": "Analysis Id" },
+          "status": { "$ref": "#/components/schemas/AnalysisStatus" },
+          "file_key": { "type": "string", "title": "File Key" },
+          "paper_id": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "Paper Id" }
+        },
+        "type": "object",
+        "required": ["analysis_id", "status", "file_key"],
+        "title": "GetAnalysisResponse",
+        "description": "Response model for retrieving an analysis task."
+      },
+      "HTTPValidationError": {
+        "properties": { "detail": { "items": { "$ref": "#/components/schemas/ValidationError" }, "type": "array", "title": "Detail" } },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "Header": {
+        "properties": {
+          "_id": { "anyOf": [{ "$ref": "#/components/schemas/PydanticObjectId" }, { "type": "null" }], "description": "MongoDB document ObjectID" },
+          "kind": { "$ref": "#/components/schemas/BlockKind" },
+          "paper": {
+            "anyOf": [
+              { "properties": { "id": { "type": "string", "title": "Id" }, "collection": { "type": "string", "title": "Collection" } }, "type": "object", "required": ["id", "collection"] },
+              { "additionalProperties": true, "type": "object" }
+            ],
+            "title": "Paper"
+          },
+          "next_block": {
+            "anyOf": [
+              { "properties": { "id": { "type": "string", "title": "Id" }, "collection": { "type": "string", "title": "Collection" } }, "type": "object", "required": ["id", "collection"] },
+              { "additionalProperties": true, "type": "object" },
+              { "type": "null" }
+            ],
+            "title": "Next Block"
+          },
+          "level": { "type": "integer", "title": "Level" },
+          "text": { "type": "string", "title": "Text" }
+        },
+        "type": "object",
+        "required": ["kind", "paper", "level", "text"],
+        "title": "Header"
+      },
+      "LanguageCode": {
+        "type": "string",
+        "enum": ["en", "es", "fr", "de", "ja", "ko", "pt", "ru", "ar", "hi", "zh-CN", "zh-TW"],
+        "title": "LanguageCode",
+        "description": "Language codes, using BCP 47 format."
+      },
+      "LanguageInfo": {
+        "properties": { "code": { "type": "string", "title": "Code" }, "name": { "type": "string", "title": "Name" } },
+        "type": "object",
+        "required": ["code", "name"],
+        "title": "LanguageInfo",
+        "description": "Language information model.\n\n:param code: Language code (BCP 47 format).\n:param name: Full language name."
+      },
+      "Paper": {
+        "properties": {
+          "_id": { "anyOf": [{ "$ref": "#/components/schemas/PydanticObjectId" }, { "type": "null" }], "description": "MongoDB document ObjectID" },
+          "title": { "type": "string", "title": "Title" },
+          "created_at": { "type": "string", "format": "date-time", "title": "Created At" }
+        },
+        "type": "object",
+        "required": ["title"],
+        "title": "Paper"
+      },
+      "PaperBlocksResponse": {
+        "properties": {
+          "blocks": {
+            "items": {
+              "anyOf": [
+                { "$ref": "#/components/schemas/Paragraph" },
+                { "$ref": "#/components/schemas/Header" },
+                { "$ref": "#/components/schemas/Figure" },
+                { "$ref": "#/components/schemas/Table" },
+                { "$ref": "#/components/schemas/Equation" },
+                { "$ref": "#/components/schemas/CodeBlock" },
+                { "$ref": "#/components/schemas/Quote" },
+                { "$ref": "#/components/schemas/Callout" },
+                { "$ref": "#/components/schemas/Reference" },
+                { "$ref": "#/components/schemas/Footnote" },
+                { "$ref": "#/components/schemas/Quiz" }
+              ]
+            },
+            "type": "array",
+            "title": "Blocks"
+          }
+        },
+        "type": "object",
+        "required": ["blocks"],
+        "title": "PaperBlocksResponse",
+        "description": "Response model for retrieving blocks of a paper."
+      },
+      "Paragraph": {
+        "properties": {
+          "_id": { "anyOf": [{ "$ref": "#/components/schemas/PydanticObjectId" }, { "type": "null" }], "description": "MongoDB document ObjectID" },
+          "kind": { "$ref": "#/components/schemas/BlockKind" },
+          "paper": {
+            "anyOf": [
+              { "properties": { "id": { "type": "string", "title": "Id" }, "collection": { "type": "string", "title": "Collection" } }, "type": "object", "required": ["id", "collection"] },
+              { "additionalProperties": true, "type": "object" }
+            ],
+            "title": "Paper"
+          },
+          "next_block": {
+            "anyOf": [
+              { "properties": { "id": { "type": "string", "title": "Id" }, "collection": { "type": "string", "title": "Collection" } }, "type": "object", "required": ["id", "collection"] },
+              { "additionalProperties": true, "type": "object" },
+              { "type": "null" }
+            ],
+            "title": "Next Block"
+          },
+          "title": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "Title" },
+          "text": { "type": "string", "title": "Text" }
+        },
+        "type": "object",
+        "required": ["kind", "paper", "text"],
+        "title": "Paragraph"
+      },
+      "PydanticObjectId": { "type": "string", "maxLength": 24, "minLength": 24, "pattern": "^[0-9a-f]{24}$", "example": "5eb7cf5a86d9755df3a6c593" },
+      "Quiz": {
+        "properties": {
+          "_id": { "anyOf": [{ "$ref": "#/components/schemas/PydanticObjectId" }, { "type": "null" }], "description": "MongoDB document ObjectID" },
+          "kind": { "$ref": "#/components/schemas/BlockKind" },
+          "paper": {
+            "anyOf": [
+              { "properties": { "id": { "type": "string", "title": "Id" }, "collection": { "type": "string", "title": "Collection" } }, "type": "object", "required": ["id", "collection"] },
+              { "additionalProperties": true, "type": "object" }
+            ],
+            "title": "Paper"
+          },
+          "next_block": {
+            "anyOf": [
+              { "properties": { "id": { "type": "string", "title": "Id" }, "collection": { "type": "string", "title": "Collection" } }, "type": "object", "required": ["id", "collection"] },
+              { "additionalProperties": true, "type": "object" },
+              { "type": "null" }
+            ],
+            "title": "Next Block"
+          },
+          "question": { "type": "string", "title": "Question" },
+          "options": { "items": { "type": "string" }, "type": "array", "title": "Options" },
+          "correct_answer": { "type": "integer", "title": "Correct Answer" },
+          "explanation": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "Explanation" }
+        },
+        "type": "object",
+        "required": ["kind", "paper", "question", "options", "correct_answer"],
+        "title": "Quiz"
+      },
+      "Quote": {
+        "properties": {
+          "_id": { "anyOf": [{ "$ref": "#/components/schemas/PydanticObjectId" }, { "type": "null" }], "description": "MongoDB document ObjectID" },
+          "kind": { "$ref": "#/components/schemas/BlockKind" },
+          "paper": {
+            "anyOf": [
+              { "properties": { "id": { "type": "string", "title": "Id" }, "collection": { "type": "string", "title": "Collection" } }, "type": "object", "required": ["id", "collection"] },
+              { "additionalProperties": true, "type": "object" }
+            ],
+            "title": "Paper"
+          },
+          "next_block": {
+            "anyOf": [
+              { "properties": { "id": { "type": "string", "title": "Id" }, "collection": { "type": "string", "title": "Collection" } }, "type": "object", "required": ["id", "collection"] },
+              { "additionalProperties": true, "type": "object" },
+              { "type": "null" }
+            ],
+            "title": "Next Block"
+          },
+          "text": { "type": "string", "title": "Text" },
+          "author": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "Author" }
+        },
+        "type": "object",
+        "required": ["kind", "paper", "text"],
+        "title": "Quote"
+      },
+      "Reference": {
+        "properties": {
+          "_id": { "anyOf": [{ "$ref": "#/components/schemas/PydanticObjectId" }, { "type": "null" }], "description": "MongoDB document ObjectID" },
+          "kind": { "$ref": "#/components/schemas/BlockKind" },
+          "paper": {
+            "anyOf": [
+              { "properties": { "id": { "type": "string", "title": "Id" }, "collection": { "type": "string", "title": "Collection" } }, "type": "object", "required": ["id", "collection"] },
+              { "additionalProperties": true, "type": "object" }
+            ],
+            "title": "Paper"
+          },
+          "next_block": {
+            "anyOf": [
+              { "properties": { "id": { "type": "string", "title": "Id" }, "collection": { "type": "string", "title": "Collection" } }, "type": "object", "required": ["id", "collection"] },
+              { "additionalProperties": true, "type": "object" },
+              { "type": "null" }
+            ],
+            "title": "Next Block"
+          },
+          "title": { "type": "string", "title": "Title" },
+          "authors": { "items": { "type": "string" }, "type": "array", "title": "Authors" },
+          "publication_year": { "anyOf": [{ "type": "integer" }, { "type": "null" }], "title": "Publication Year" },
+          "journal": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "Journal" },
+          "volume": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "Volume" },
+          "issue": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "Issue" },
+          "pages": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "Pages" },
+          "doi": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "Doi" }
+        },
+        "type": "object",
+        "required": ["kind", "paper", "title", "authors"],
+        "title": "Reference"
+      },
+      "SummaryRequest": {
+        "properties": {
+          "block_ids": { "items": { "type": "string" }, "type": "array", "title": "Block Ids" },
+          "language": { "anyOf": [{ "$ref": "#/components/schemas/LanguageCode" }, { "type": "null" }], "default": "en" }
+        },
+        "type": "object",
+        "required": ["block_ids"],
+        "title": "SummaryRequest"
+      },
+      "Table": {
+        "properties": {
+          "_id": { "anyOf": [{ "$ref": "#/components/schemas/PydanticObjectId" }, { "type": "null" }], "description": "MongoDB document ObjectID" },
+          "kind": { "$ref": "#/components/schemas/BlockKind" },
+          "paper": {
+            "anyOf": [
+              { "properties": { "id": { "type": "string", "title": "Id" }, "collection": { "type": "string", "title": "Collection" } }, "type": "object", "required": ["id", "collection"] },
+              { "additionalProperties": true, "type": "object" }
+            ],
+            "title": "Paper"
+          },
+          "next_block": {
+            "anyOf": [
+              { "properties": { "id": { "type": "string", "title": "Id" }, "collection": { "type": "string", "title": "Collection" } }, "type": "object", "required": ["id", "collection"] },
+              { "additionalProperties": true, "type": "object" },
+              { "type": "null" }
+            ],
+            "title": "Next Block"
+          },
+          "caption": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "Caption" },
+          "title": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "Title" },
+          "columns": { "items": { "type": "string" }, "type": "array", "title": "Columns" },
+          "rows": { "items": { "items": { "type": "string" }, "type": "array" }, "type": "array", "title": "Rows" }
+        },
+        "type": "object",
+        "required": ["kind", "paper", "columns", "rows"],
+        "title": "Table"
+      },
+      "TranslationResponse": {
+        "properties": {
+          "id": { "type": "string", "title": "Id" },
+          "block_id": { "type": "string", "title": "Block Id" },
+          "content": { "type": "string", "title": "Content" },
+          "language": { "$ref": "#/components/schemas/LanguageCode" }
+        },
+        "type": "object",
+        "required": ["id", "block_id", "content", "language"],
+        "title": "TranslationResponse",
+        "description": "Response model for block translation.\n\n:param id: Translation ID.\n:param block_id: ID of the translated block.\n:param content: Translated content.\n:param language: Language code of the translation."
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": { "items": { "anyOf": [{ "type": "string" }, { "type": "integer" }] }, "type": "array", "title": "Location" },
+          "msg": { "type": "string", "title": "Message" },
+          "type": { "type": "string", "title": "Error Type" }
+        },
+        "type": "object",
+        "required": ["loc", "msg", "type"],
+        "title": "ValidationError"
+      }
+    }
+  }
+}
