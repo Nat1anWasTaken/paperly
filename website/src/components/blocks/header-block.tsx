@@ -1,4 +1,5 @@
 import { HeaderBlock } from "@/data/types";
+import { MdxRenderer } from "@/components/ui/mdx-renderer";
 
 interface HeaderBlockProps {
   block: HeaderBlock;
@@ -20,18 +21,18 @@ export function HeaderBlockComponent({ block }: HeaderBlockProps) {
 
   switch (level) {
     case 1:
-      return <h1 className={className}>{block.text}</h1>;
+      return <h1 className={className} dangerouslySetInnerHTML={{ __html: block.text }} />;
     case 2:
-      return <h2 className={className}>{block.text}</h2>;
+      return <h2 className={className} dangerouslySetInnerHTML={{ __html: block.text }} />;
     case 3:
-      return <h3 className={className}>{block.text}</h3>;
+      return <h3 className={className} dangerouslySetInnerHTML={{ __html: block.text }} />;
     case 4:
-      return <h4 className={className}>{block.text}</h4>;
+      return <h4 className={className} dangerouslySetInnerHTML={{ __html: block.text }} />;
     case 5:
-      return <h5 className={className}>{block.text}</h5>;
+      return <h5 className={className} dangerouslySetInnerHTML={{ __html: block.text }} />;
     case 6:
-      return <h6 className={className}>{block.text}</h6>;
+      return <h6 className={className} dangerouslySetInnerHTML={{ __html: block.text }} />;
     default:
-      return <h1 className={className}>{block.text}</h1>;
+      return <h1 className={className} dangerouslySetInnerHTML={{ __html: block.text }} />;
   }
 }

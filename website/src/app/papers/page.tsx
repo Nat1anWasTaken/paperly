@@ -14,11 +14,17 @@ export default function PapersPage() {
   const { data: papers = [], isLoading: loading, error } = usePapers();
   const { prefetchPaper } = usePrefetchPaper();
 
-  // Filter papers based on search query
+  // Sort papers by creation date (newest first) and filter based on search query
   const filteredPapers = React.useMemo(() => {
-    if (!searchQuery.trim()) return papers;
+    const sortedPapers = [...papers].sort((a, b) => {
+      const dateA = new Date(a.created_at || 0).getTime();
+      const dateB = new Date(b.created_at || 0).getTime();
+      return dateB - dateA; // Newest first
+    });
 
-    return papers.filter((paper) => paper.title.toLowerCase().includes(searchQuery.toLowerCase()));
+    if (!searchQuery.trim()) return sortedPapers;
+
+    return sortedPapers.filter((paper) => paper.title.toLowerCase().includes(searchQuery.toLowerCase()));
   }, [papers, searchQuery]);
 
   const formatDate = (dateString?: string) => {
