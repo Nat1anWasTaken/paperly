@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { PaperBlock } from "@/data/types";
+import { PaperBlock, BlockKind } from "@/data/types";
 import { useTranslation } from "@/contexts/translation-context";
 import { useBlockTranslation } from "@/hooks/use-analysis";
 import { Loader2, AlertCircle } from "lucide-react";
@@ -14,8 +14,20 @@ interface TranslatedBlockWrapperProps {
 export function TranslatedBlockWrapper({ block, children }: TranslatedBlockWrapperProps) {
   const { currentLanguage, isTranslationMode } = useTranslation();
   
-  // Only fetch translation if we're in translation mode and not English
-  const shouldFetchTranslation = isTranslationMode && currentLanguage !== "en";
+  // Define which block types should be translated
+  const translatableBlockTypes = [
+    BlockKind.HEADER,
+    BlockKind.PARAGRAPH,
+    BlockKind.QUIZ,
+    BlockKind.QUOTE,
+    BlockKind.TABLE,
+    BlockKind.FOOTNOTE
+  ];
+  
+  // Only fetch translation if we're in translation mode, not English, and block type is translatable
+  const shouldFetchTranslation = isTranslationMode && 
+    currentLanguage !== "en" && 
+    translatableBlockTypes.includes(block.kind);
   
   const {
     data: translation,
