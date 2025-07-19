@@ -20,7 +20,7 @@ export function PaperHeader({ paperTitle, onToggleSidebar }: PaperHeaderProps) {
   return (
     <TooltipProvider>
       <header className="sticky top-2 z-10 mx-4 mt-2 mb-3 flex items-center justify-between bg-background/20 backdrop-blur-2xl supports-[backdrop-filter]:bg-background/10 px-4 py-2.5 border border-border shadow-lg rounded-lg">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 min-w-0 flex-1">
           <Tooltip>
             <TooltipTrigger asChild>
               <Button variant="ghost" size="icon" onClick={onToggleSidebar} className="size-9">
@@ -31,11 +31,11 @@ export function PaperHeader({ paperTitle, onToggleSidebar }: PaperHeaderProps) {
               <p>Toggle sidebar</p>
             </TooltipContent>
           </Tooltip>
-          <FileText className="size-5 text-primary" />
-          <span className="text-base font-medium text-foreground truncate max-w-[400px]">{paperTitle}</span>
+          <FileText className="size-5 text-primary flex-shrink-0" />
+          <span className="text-base font-medium text-foreground truncate min-w-0">{paperTitle}</span>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-end justify-end gap-2 flex-shrink-0">
           {isTranslationMode && <LanguageSelect value={currentLanguage} onValueChange={setCurrentLanguage} placeholder="Select language" className="w-36" />}
           <Tooltip>
             <TooltipTrigger asChild>
