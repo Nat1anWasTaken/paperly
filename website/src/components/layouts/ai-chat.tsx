@@ -355,7 +355,7 @@ export function AiChat({ paperId }: AiChatProps) {
         content: msg.content
       }));
 
-      const response = await api.chatWithPaper(paperId, messageToSend, history, "en_US");
+      const response = await api.chatWithPaper(paperId, messageToSend, history);
 
       // Create placeholder for streaming response
       const aiMessageId = (Date.now() + 1).toString();

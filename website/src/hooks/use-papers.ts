@@ -118,15 +118,7 @@ export function usePaperData(paperId: string) {
   const blocksQuery = usePaperBlocks(paperId);
   const sectionsQuery = usePaperSections(paperId);
 
-  console.log("usePaperData debug:", {
-    paperId,
-    paper: !!paperQuery.data,
-    blocks: !!blocksQuery.data,
-    sections: !!sectionsQuery.data,
-    sectionsLoading: sectionsQuery.isLoading,
-    sectionsError: sectionsQuery.isError,
-    sectionsEnabled: sectionsQuery.isEnabled
-  });
+
 
   // Check if we have any cached data
   const hasCachedData = !!(paperQuery.data || blocksQuery.data || sectionsQuery.data);

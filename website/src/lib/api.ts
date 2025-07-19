@@ -257,7 +257,7 @@ export class PaperlyAPI {
   /**
    * Chat with a paper
    */
-  async chatWithPaper(paperId: string, message: string, history: Array<{ role: string; content: string }> = [], language: string = "en"): Promise<Response> {
+  async chatWithPaper(paperId: string, message: string, history: Array<{ role: string; content: string }> = []): Promise<Response> {
     const response = await fetch(`${this.baseUrl}/chat/${paperId}`, {
       method: "POST",
       headers: {
@@ -265,8 +265,7 @@ export class PaperlyAPI {
       },
       body: JSON.stringify({
         message,
-        history,
-        language
+        history
       })
     });
 

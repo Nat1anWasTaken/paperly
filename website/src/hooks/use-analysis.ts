@@ -72,8 +72,8 @@ export function useCreateSummary() {
  */
 export function useChatWithPaper() {
   return useMutation({
-    mutationFn: async ({ paperId, message, history = [], language = "en" }: { paperId: string; message: string; history?: Array<{ role: string; content: string }>; language?: string }) => {
-      return api.chatWithPaper(paperId, message, history, language);
+    mutationFn: async ({ paperId, message, history = [] }: { paperId: string; message: string; history?: Array<{ role: string; content: string }> }) => {
+      return api.chatWithPaper(paperId, message, history);
     }
   });
 }
