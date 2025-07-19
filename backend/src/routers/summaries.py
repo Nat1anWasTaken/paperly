@@ -18,10 +18,10 @@ logger = get_logger(__name__)
 
 class SummaryRequest(BaseModel):
     block_ids: List[str]
-    language: Optional[LanguageCode] = "en"
+    language: Optional[LanguageCode] = LanguageCode.EN
 
 
-async def generate_summary_stream(blocks_content: str, language: str = "en_US"):
+async def generate_summary_stream(blocks_content: str, language: LanguageCode):
     """
     Generate a streaming summary using OpenAI client with proper SSE format.
 
@@ -43,7 +43,7 @@ async def generate_summary_stream(blocks_content: str, language: str = "en_US"):
     # Format the prompt with the blocks content and language
     try:
         prompt = prompt_template.format(
-            blocks_content=blocks_content, language=language
+            blocks_content=blocks_content, language=language.full_name
         )
     except KeyError as e:
         yield f"event: error\ndata: Template formatting error - missing parameter: {e}\n\n"
@@ -161,7 +161,7 @@ async def create_summary(request: SummaryRequest):
 
         # Return streaming response with language support
         return StreamingResponse(
-            generate_summary_stream(blocks_content, request.language or "en_US"),
+            generate_summary_stream(blocks_content, language=request.language),
             media_type="text/event-stream",
             headers={
                 "Cache-Control": "no-cache",

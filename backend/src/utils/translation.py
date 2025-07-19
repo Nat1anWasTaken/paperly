@@ -1,8 +1,20 @@
 import os
 
 from src.logging import get_logger
-from src.models.block import Block, BlockKind, Paragraph, Header, Table, Equation, CodeBlock, Quote, Callout, Reference, \
-    Footnote, Quiz
+from src.models.block import (
+    Block,
+    BlockKind,
+    Paragraph,
+    Header,
+    Table,
+    Equation,
+    CodeBlock,
+    Quote,
+    Callout,
+    Reference,
+    Footnote,
+    Quiz,
+)
 from src.models.translation import Translation, LanguageCode
 from src.openai import client, model
 
@@ -26,7 +38,7 @@ TRANSLATABLE_BLOCK_KINDS = {
 def _get_block_content(block: Block) -> str:
     """
     Extract translatable content from a block.
-    
+
     :param block: The block to extract content from.
     :return: The content to be translated.
     :rtype: str
@@ -36,7 +48,9 @@ def _get_block_content(block: Block) -> str:
         raise ValueError("Figure blocks cannot be translated")
 
     if isinstance(block, Paragraph):
-        return f"Title: {block.title}\nText: {block.text}" if block.title else block.text
+        return (
+            f"Title: {block.title}\nText: {block.text}" if block.title else block.text
+        )
     elif isinstance(block, Header):
         return block.text
     elif isinstance(block, Table):
@@ -49,11 +63,19 @@ def _get_block_content(block: Block) -> str:
         content += "Rows:\n" + "\n".join([" | ".join(row) for row in block.rows])
         return content
     elif isinstance(block, Equation):
-        return f"Caption: {block.caption}\nEquation: {block.equation}" if block.caption else block.equation
+        return (
+            f"Caption: {block.caption}\nEquation: {block.equation}"
+            if block.caption
+            else block.equation
+        )
     elif isinstance(block, CodeBlock):
         return block.code
     elif isinstance(block, Quote):
-        return f"Text: {block.text}\nAuthor: {block.author}" if block.author else block.text
+        return (
+            f"Text: {block.text}\nAuthor: {block.author}"
+            if block.author
+            else block.text
+        )
     elif isinstance(block, Callout):
         return block.text
     elif isinstance(block, Reference):
@@ -74,10 +96,12 @@ def _get_block_content(block: Block) -> str:
         raise ValueError(f"Unsupported block type: {type(block)}")
 
 
-def _get_translation_prompt(content: str, target_language: LanguageCode, block_kind: BlockKind) -> str:
+def _get_translation_prompt(
+    content: str, target_language: LanguageCode, block_kind: BlockKind
+) -> str:
     """
     Generate a translation prompt for the given content and target language.
-    
+
     :param content: The content to be translated.
     :param target_language: The target language code.
     :param block_kind: The kind of block being translated.
@@ -86,6 +110,10 @@ def _get_translation_prompt(content: str, target_language: LanguageCode, block_k
     """
     # Get the human-readable language name
     language_name = target_language.full_name
+
+    logger.info(
+        f"Generating translation prompt for {block_kind.value} in {language_name}"
+    )
 
     # Read the prompt template
     current_dir = os.path.dirname(
@@ -109,7 +137,7 @@ def _get_translation_prompt(content: str, target_language: LanguageCode, block_k
 async def translate_block(block: Block, target_language: LanguageCode) -> Translation:
     """
     Translate a block's content to the target language.
-    
+
     :param block: The block to translate.
     :param target_language: The target language code.
     :return: The translation object.
@@ -121,8 +149,7 @@ async def translate_block(block: Block, target_language: LanguageCode) -> Transl
 
     # Check if translation already exists
     existing_translation = await Translation.find_one(
-        Translation.block.id == block.id,
-        Translation.language == target_language
+        Translation.block.id == block.id, Translation.language == target_language
     )
 
     if existing_translation:
@@ -135,24 +162,22 @@ async def translate_block(block: Block, target_language: LanguageCode) -> Transl
     try:
         response = client.chat.completions.create(
             model=model,
-            messages=[
-                {"role": "user", "content": prompt}
-            ],
+            messages=[{"role": "user", "content": prompt}],
             temperature=0.1,
-            max_tokens=2000
+            max_tokens=2000,
         )
 
         translated_content = response.choices[0].message.content.strip()
 
         # Create and save translation
         translation = Translation(
-            block=block,
-            content=translated_content,
-            language=target_language
+            block=block, content=translated_content, language=target_language
         )
 
         await translation.save()
-        logger.info(f"Created translation for block {block.id} to {target_language.value}")
+        logger.info(
+            f"Created translation for block {block.id} to {target_language.value}"
+        )
 
         return translation
 
