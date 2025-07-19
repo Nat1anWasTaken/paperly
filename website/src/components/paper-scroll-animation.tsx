@@ -27,7 +27,7 @@ const papers = [
   {
     title: "Attention Is All You Need",
     subtitle: "Transformers: A Revolutionary Architecture for Natural Language Processing",
-    images: generateImagePaths("1706.03762v7", 15)
+    images: generateImagePaths("1706.03762v7", 10)
   },
   {
     title: "PLOS ONE Research Paper",
@@ -37,12 +37,12 @@ const papers = [
   {
     title: "Educational Technology Research",
     subtitle: "Smart Learning Environments and Digital Innovation",
-    images: generateImagePaths("s40561-025-00377-2", 28)
+    images: generateImagePaths("s40561-025-00377-2", 10)
   },
   {
     title: "Using Thematic Analysis in Psychology",
     subtitle: "Qualitative Research Methods and Data Analysis Techniques",
-    images: generatePsychologyImagePaths("Using_thematic_analysis_in_psychology_page", 43)
+    images: generatePsychologyImagePaths("Using_thematic_analysis_in_psychology_page", 10)
   }
 ];
 
