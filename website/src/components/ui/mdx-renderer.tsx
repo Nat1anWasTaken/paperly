@@ -106,7 +106,19 @@ const markdownComponents: any = {
   br: () => <br className="my-1" />,
 
   // Horizontal rules
-  hr: ({ ...props }: any) => <hr className="my-4 border-t border-border" {...props} />
+  hr: ({ ...props }: any) => <hr className="my-4 border-t border-border" {...props} />,
+
+  // Superscript and subscript
+  sup: ({ children, ...props }: any) => (
+    <sup className="text-xs align-super" {...props}>
+      {children}
+    </sup>
+  ),
+  sub: ({ children, ...props }: any) => (
+    <sub className="text-xs align-sub" {...props}>
+      {children}
+    </sub>
+  )
 };
 /* eslint-enable @typescript-eslint/no-explicit-any */
 
