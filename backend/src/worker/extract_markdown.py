@@ -1,11 +1,12 @@
 import asyncio
+import json
+import subprocess
+import tempfile
 from io import BytesIO
+from pathlib import Path
 
 from PIL import Image
 from beanie import WriteRules
-from marker.converters.pdf import PdfConverter
-from marker.models import create_model_dict
-from marker.output import text_from_rendered
 
 from src.logging import get_logger
 from src.models.analysis import Analysis, AnalysisStatus
@@ -67,7 +68,6 @@ def debug_images_data(images):
 class MarkdownExtractionWorker(BaseWorker):
     def __init__(self):
         super().__init__()
-        self.converter = PdfConverter(artifact_dict=create_model_dict())
 
     def get_target_status(self) -> AnalysisStatus:
         """
@@ -77,6 +77,92 @@ class MarkdownExtractionWorker(BaseWorker):
         :rtype: AnalysisStatus
         """
         return AnalysisStatus.CREATED
+
+    async def _process_pdf_in_subprocess(
+        self, file_object: BytesIO, analysis_id: str
+    ) -> tuple[str, dict]:
+        """
+        Process PDF in a subprocess to avoid segmentation faults.
+
+        :param file_object: BytesIO object containing PDF data
+        :param analysis_id: Analysis ID for logging
+        :return: Tuple of (markdown_content, images)
+        """
+        import pickle
+
+        logger.debug(f"Starting subprocess PDF processing for analysis {analysis_id}")
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+
+            # Save PDF to temporary file
+            pdf_path = temp_path / "input.pdf"
+            with open(pdf_path, "wb") as f:
+                f.write(file_object.getvalue())
+
+            # Set output base path
+            output_base = temp_path / "output"
+
+            # Get path to PDF processor script
+            processor_script = (
+                Path(__file__).parent.parent / "utils" / "pdf_processor.py"
+            )
+
+            # Run PDF processing in subprocess
+            try:
+                process = await asyncio.create_subprocess_exec(
+                    "python",
+                    str(processor_script),
+                    str(pdf_path),
+                    str(output_base),
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                )
+
+                stdout, stderr = await process.communicate()
+
+                if process.returncode != 0:
+                    error_msg = (
+                        stderr.decode() if stderr else "Unknown subprocess error"
+                    )
+                    raise Exception(f"PDF processing subprocess failed: {error_msg}")
+
+                logger.debug(
+                    f"Subprocess completed for analysis {analysis_id}: {stdout.decode().strip()}"
+                )
+
+                # Read results
+                metadata_path = temp_path / "output_metadata.json"
+                with open(metadata_path, "r") as f:
+                    metadata = json.load(f)
+
+                if not metadata.get("success", False):
+                    raise Exception(
+                        f"PDF processing failed: {metadata.get('error', 'Unknown error')}"
+                    )
+
+                # Read markdown content
+                markdown_path = temp_path / "output.md"
+                with open(markdown_path, "r", encoding="utf-8") as f:
+                    markdown_content = f.read()
+
+                # Read images data
+                images_path = temp_path / "output_images.pkl"
+                with open(images_path, "rb") as f:
+                    images = pickle.load(f)
+
+                logger.debug(
+                    f"Successfully loaded results for analysis {analysis_id}: "
+                    f"{len(markdown_content)} chars, {len(images)} images"
+                )
+
+                return markdown_content, images
+
+            except Exception as e:
+                logger.error(
+                    f"Failed to process PDF in subprocess for analysis {analysis_id}: {str(e)}"
+                )
+                raise
 
     async def process_analysis(self, analysis: Analysis):
         """
@@ -96,15 +182,9 @@ class MarkdownExtractionWorker(BaseWorker):
                 f"File downloaded for analysis {analysis.id}, converting to markdown"
             )
 
-            # Convert PDF to markdown in thread pool to avoid blocking
-            loop = asyncio.get_event_loop()
-            rendered = self.converter(file_object)
-
-            logger.debug(
-                f"PDF conversion completed for analysis {analysis.id}, extracting text and images"
-            )
-            markdown_content, _, images = await loop.run_in_executor(
-                None, text_from_rendered, rendered
+            # Process PDF in subprocess to avoid segmentation faults
+            markdown_content, images = await self._process_pdf_in_subprocess(
+                file_object, str(analysis.id)
             )
 
             markdown_length = len(markdown_content) if markdown_content else 0
